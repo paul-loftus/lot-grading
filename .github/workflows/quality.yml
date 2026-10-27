@@ -81,7 +81,7 @@ jobs:
         run: Compress-Archive -Path "release/LotGrade-${{ matrix.platform }}-${{ matrix.arch }}" -DestinationPath "release/LotGrade-v0-${{ matrix.platform }}-${{ matrix.arch }}.zip"
       - name: Preserve test diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: diagnostics-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
@@ -90,7 +90,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Preserve the verified application bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: LotGrade-v0-${{ matrix.platform }}-${{ matrix.arch }}
           path: release/LotGrade-v0-${{ matrix.platform }}-${{ matrix.arch }}.zip

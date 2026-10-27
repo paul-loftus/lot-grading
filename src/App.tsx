@@ -24,6 +24,17 @@ function relativeDate(value: string): string {
   const date = new Date(value);
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
+
+/** Flush inspector edits before taking the document snapshot used by file actions. */
+function commitFocusedField(): void {
+  const element = document.activeElement;
+  if (
+    element instanceof HTMLElement &&
+    element.matches('input, textarea, select, [contenteditable]')
+  ) {
+    element.blur();
+  }
+}
 function MiniPlan({ project }: { project?: Project }) {
   const entities = project?.entities ?? [];
   const points = entities.flatMap((entity) => entity.points);
@@ -178,6 +189,7 @@ export default function App() {
   }, []);
   const save = useCallback(async () => {
     try {
+      commitFocusedField();
       if (activeRef.current) await persist(activeRef.current);
     } catch {
       /* persist reports the failure */
@@ -185,6 +197,7 @@ export default function App() {
   }, [persist]);
   const saveAs = useCallback(async () => {
     try {
+      commitFocusedField();
       const project = activeRef.current;
       if (!project) return;
       const snapshot = validateProject(project);
@@ -198,6 +211,7 @@ export default function App() {
   }, [persist, notifyError]);
   const exportProject = useCallback(async () => {
     try {
+      commitFocusedField();
       const project = activeRef.current;
       if (!project) return;
       const snapshot = validateProject(project);
@@ -214,6 +228,7 @@ export default function App() {
   }, [persist, notifyError]);
   const importProject = useCallback(async () => {
     try {
+      commitFocusedField();
       const imported = await platform.openProjectFile();
       if (!imported) return;
       const existing = projects.some((p) => p.id === imported.id);
@@ -239,6 +254,7 @@ export default function App() {
   }, []);
   const back = useCallback(async () => {
     try {
+      commitFocusedField();
       if (activeRef.current) await persist(activeRef.current);
       setActive(null);
       activeRef.current = null;
@@ -250,6 +266,8 @@ export default function App() {
   useEffect(
     () =>
       platform.onMenuAction((action) => {
+        // Text Undo/Redo must keep focus so the workspace can undo the field edit.
+        if (action !== 'undo' && action !== 'redo') commitFocusedField();
         if (action === 'new') newProject();
         if (action === 'open') void importProject();
         if (action === 'save') void save();

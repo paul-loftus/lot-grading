@@ -38,7 +38,11 @@ test('native desktop saves, exports via native dialog, reopens, and flushes on c
     await page.mouse.click(box.x + 120, box.y + 180);
     await page.mouse.click(box.x + 260, box.y + 210);
     await page.keyboard.press('Enter');
-    await expect(page.getByText('Saved to library', { exact: true })).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(async () => (await window.lotgrade!.listProjects())[0].entities.length),
+      )
+      .toBe(1);
     await page.keyboard.press(process.platform === 'darwin' ? 'Meta+z' : 'Control+z');
     await expect
       .poll(() =>
@@ -55,7 +59,13 @@ test('native desktop saves, exports via native dialog, reopens, and flushes on c
     await application!.evaluate(({ dialog }, file) => {
       dialog.showSaveDialog = async () => ({ canceled: false, filePath: file });
     }, exportPath);
-    await page.getByTestId('export-dxf').click();
+    await page.getByRole('button', { name: /^Features/ }).click();
+    await page.getByRole('button', { name: /Contour 1/ }).click();
+    await page.getByLabel('Elevation', { exact: true }).fill('207.875');
+    // Native menu accelerators do not blur the focused inspector input by themselves.
+    await application!.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'export'),
+    );
     await expect
       .poll(async () => {
         try {
@@ -64,9 +74,10 @@ test('native desktop saves, exports via native dialog, reopens, and flushes on c
           return '';
         }
       })
-      .toContain('206.125');
+      .toContain('207.875');
     const exported = await readFile(exportPath, 'utf8');
     expect(exported).toContain('AC1027');
+    expect(exported).not.toContain('206.125');
 
     // Choose a portable native file path without automating the OS file picker.
     const portablePath = path.join(directory, 'native-project.lotgrade');
@@ -87,7 +98,10 @@ test('native desktop saves, exports via native dialog, reopens, and flushes on c
 
     await page.getByTestId('tool-point').click();
     await page.mouse.click(box.x + 350, box.y + 260);
-    // Close immediately after an edit: the native close handshake waits for saves.
+    await page.getByRole('button', { name: /^Features/ }).click();
+    await page.getByRole('button', { name: /Spot elevation 1/ }).click();
+    await page.getByLabel('Elevation', { exact: true }).fill('-43.625');
+    // Close with a focused edit: the handshake commits the field and waits for saves.
     await application!.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].close());
     await expect
       .poll(async () => {
@@ -102,9 +116,14 @@ test('native desktop saves, exports via native dialog, reopens, and flushes on c
             'utf8',
           ),
         );
-        return project.entities.length;
+        return {
+          count: project.entities.length,
+          spotElevation: project.entities.find(
+            (entity: { kind: string }) => entity.kind === 'point',
+          )?.points[0].z,
+        };
       })
-      .toBe(2);
+      .toEqual({ count: 2, spotElevation: -43.625 });
     await application!.close();
     application = undefined;
     page = await launch();
