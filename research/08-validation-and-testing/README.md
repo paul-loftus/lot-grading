@@ -107,4 +107,4 @@ Before a production release, complete at least one full detached-home job from s
 
 Usability acceptance should count total elapsed task time and downstream corrections, as described in [product research](../01-product-and-market/README.md). Release only the housing types and geometric conditions actually exercised.
 
-**Current status:** this is a test plan. No application implementation, geometry tests, Civil 3D imports, or professional design validation have been performed.
+**Research-stage status:** this was the initial test plan. For implemented v0 tests and current evidence, use the [acceptance checklist](../../docs/V0-ACCEPTANCE.md). Surface-engine validation and professional design review remain future work.

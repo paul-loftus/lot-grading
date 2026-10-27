@@ -1,0 +1,2 @@
+# Independent CAD parser used by the release/export gate; not an app dependency.
+ezdxf==1.4.3

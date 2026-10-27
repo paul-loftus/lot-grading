@@ -1,0 +1,73 @@
+{
+  "contractVersion": 1,
+  "cases": [
+    {
+      "name": "all-tools-meters",
+      "project": {
+        "schemaVersion": 1,
+        "id": "export-contract",
+        "name": "Export contract — every drawing tool",
+        "description": "Asymmetric survey coordinates and negative elevation are deliberate.",
+        "units": "meters",
+        "createdAt": "2026-10-26T00:00:00.000Z",
+        "updatedAt": "2026-10-26T00:00:00.000Z",
+        "entities": [
+          { "id": "boundary", "kind": "boundary", "name": "Lot", "points": [{"x": 2000000.125, "y": 5000000.625, "z": 101.25}, {"x": 2000050.375, "y": 5000000.625, "z": 101.25}, {"x": 2000050.375, "y": 5000075.875, "z": 101.25}, {"x": 2000000.125, "y": 5000075.875, "z": 101.25}], "closed": true, "layer": "LOT-BOUNDARY" },
+          { "id": "building", "kind": "building", "name": "House", "points": [{"x": 2000010.125, "y": 5000020.625, "z": 102.8}, {"x": 2000030.375, "y": 5000020.625, "z": 102.8}, {"x": 2000030.375, "y": 5000040.875, "z": 102.8}, {"x": 2000010.125, "y": 5000040.875, "z": 102.8}], "closed": true, "layer": "BUILDING" },
+          { "id": "contour-open", "kind": "contour", "name": "101.5 contour", "points": [{"x": 2000000.25, "y": 5000010.75, "z": 101.5}, {"x": 2000008.45, "y": 5000016.95, "z": 101.5}, {"x": 2000011.55, "y": 5000022.05, "z": 101.5}], "closed": false, "layer": "FG-CONT-MINOR" },
+          { "id": "contour-closed", "kind": "contour", "name": "Negative contour", "points": [{"x": 2000035.125, "y": 5000050.625, "z": -3.75}, {"x": 2000040.125, "y": 5000050.625, "z": -3.75}, {"x": 2000040.125, "y": 5000055.625, "z": -3.75}], "closed": true, "layer": "FG-CONT-MAJOR" },
+          { "id": "line-flat", "kind": "polyline", "name": "Flat line", "points": [{"x": 2000001.123456789, "y": 5000060.987654321, "z": 100}, {"x": 2000047.123456789, "y": 5000060.987654321, "z": 100}], "closed": false, "layer": "DESIGN-LINE" },
+          { "id": "line-3d", "kind": "polyline", "name": "Varying grade", "points": [{"x": 2000001.5, "y": 5000001.75, "z": 100.000001}, {"x": 2000008.5, "y": 5000002.75, "z": 99.125}, {"x": 2000013.5, "y": 5000004.75, "z": -0.125}], "closed": false, "layer": "FG-BREAKLINE" },
+          { "id": "closed-3d", "kind": "polyline", "name": "Varying loop", "points": [{"x": 2000040, "y": 5000010, "z": 100.1}, {"x": 2000045, "y": 5000010, "z": 100.2}, {"x": 2000045, "y": 5000015, "z": 100.3}], "closed": true, "layer": "FG-BREAKLINE" },
+          { "id": "spot", "kind": "point", "name": "Café threshold", "points": [{"x": 2000009.125, "y": 5000019.625, "z": -2.125}], "closed": false, "layer": "FG-SPOT" }
+        ],
+        "view": { "centerX": 2000025, "centerY": 5000037, "scale": 8 },
+        "settings": { "gridSize": 1, "snapToGrid": true, "contourInterval": 0.5 }
+      },
+      "expected": { "insunits": 6, "measurement": 1, "primaryEntityCount": 8, "textCount": 1, "lwpolylineCount": 5, "polyline3dCount": 2, "pointCount": 1 }
+    },
+    {
+      "name": "international-feet",
+      "project": {
+        "schemaVersion": 1, "id": "feet-contract", "name": "International feet", "description": "Coordinates remain in feet.", "units": "feet",
+        "createdAt": "2026-10-26T00:00:00.000Z", "updatedAt": "2026-10-26T00:00:00.000Z",
+        "entities": [{"id": "feet-contour", "kind": "contour", "name": "Feet contour", "points": [{"x": 1000123.25, "y": 3000456.75, "z": 350.125}, {"x": 1000134.5, "y": 3000478.875, "z": 350.125}], "closed": false, "layer": "FG-CONTOUR"}],
+        "view": {"centerX": 0, "centerY": 0, "scale": 8}, "settings": {"gridSize": 1, "snapToGrid": false, "contourInterval": 1}
+      },
+      "expected": {"insunits": 2, "measurement": 0, "primaryEntityCount": 1, "textCount": 0, "lwpolylineCount": 1, "polyline3dCount": 0, "pointCount": 0}
+    },
+    {
+      "name": "us-survey-feet",
+      "project": {
+        "schemaVersion": 1, "id": "survey-foot-contract", "name": "US survey feet", "description": "Legacy survey feet are explicitly labeled.", "units": "us-survey-feet",
+        "createdAt": "2026-10-26T00:00:00.000Z", "updatedAt": "2026-10-26T00:00:00.000Z",
+        "entities": [{"id": "survey-spot", "kind": "point", "name": "Benchmark", "points": [{"x": 2000000.123, "y": 4000000.987, "z": 1000.625}], "closed": false, "layer": "FG-SPOT"}],
+        "view": {"centerX": 0, "centerY": 0, "scale": 8}, "settings": {"gridSize": 1, "snapToGrid": false, "contourInterval": 1}
+      },
+      "expected": {"insunits": 21, "measurement": 0, "primaryEntityCount": 1, "textCount": 1, "lwpolylineCount": 0, "polyline3dCount": 0, "pointCount": 1}
+    },
+    {
+      "name": "layer-case-and-unicode",
+      "project": {
+        "schemaVersion": 1, "id": "text-contract", "name": "CAD layer and text behavior", "description": "Case-insensitive layers and Unicode/literal escape strings.", "units": "meters",
+        "createdAt": "2026-10-26T00:00:00.000Z", "updatedAt": "2026-10-26T00:00:00.000Z",
+        "entities": [
+          {"id": "case-line", "kind": "polyline", "name": "First layer spelling", "points": [{"x": 10, "y": 20, "z": 1}, {"x": 30, "y": 40, "z": 1}], "closed": false, "layer": "design-line"},
+          {"id": "case-3d", "kind": "polyline", "name": "Same CAD layer", "points": [{"x": 12, "y": 22, "z": 1}, {"x": 32, "y": 42, "z": 2}], "closed": false, "layer": "DESIGN-LINE"},
+          {"id": "unicode-spot", "kind": "point", "name": "Café \\U+0041 threshold", "points": [{"x": 14, "y": 24, "z": 3}], "closed": false, "layer": "Design-Café"}
+        ],
+        "view": {"centerX": 0, "centerY": 0, "scale": 8}, "settings": {"gridSize": 1, "snapToGrid": true, "contourInterval": 0.5}
+      },
+      "expected": {"insunits": 6, "measurement": 1, "primaryEntityCount": 3, "textCount": 1, "lwpolylineCount": 1, "polyline3dCount": 1, "pointCount": 1}
+    },
+    {
+      "name": "empty-project",
+      "project": {
+        "schemaVersion": 1, "id": "empty-contract", "name": "Empty", "description": "Blank drawings still export a valid CAD document.", "units": "meters",
+        "createdAt": "2026-10-26T00:00:00.000Z", "updatedAt": "2026-10-26T00:00:00.000Z", "entities": [],
+        "view": {"centerX": 0, "centerY": 0, "scale": 8}, "settings": {"gridSize": 1, "snapToGrid": true, "contourInterval": 0.5}
+      },
+      "expected": {"insunits": 6, "measurement": 1, "primaryEntityCount": 0, "textCount": 0, "lwpolylineCount": 0, "polyline3dCount": 0, "pointCount": 0}
+    }
+  ]
+}

@@ -101,4 +101,4 @@ Do not equate byte-identical XML with surface equivalence. Compare active domain
 - Surface styles can change displayed contour smoothing and intervals without changing the TIN.
 - Reimporting a changed design is a new revision, not proven bidirectional synchronization.
 
-**Current evidence status:** documented exchange routes only. No DXF/LandXML writer, Civil 3D import, or version compatibility matrix has been tested in this repository.
+**Research-stage evidence status:** the initial brief established documented exchange routes only. V0 now implements and independently tests DXF linework export; see the current [Civil 3D exchange contract](../../docs/CIVIL3D.md). Native Civil 3D receiving validation and LandXML surface implementation remain separate work.
