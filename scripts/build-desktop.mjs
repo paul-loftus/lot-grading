@@ -1,4 +1,5 @@
 import { build } from 'esbuild';
+import { collectNotices } from './collect-notices.mjs';
 
 await build({
   entryPoints: ['desktop/main.ts', 'desktop/preload.ts'],
@@ -11,3 +12,5 @@ await build({
   outExtension: { '.js': '.cjs' },
   sourcemap: true,
 });
+
+await collectNotices();

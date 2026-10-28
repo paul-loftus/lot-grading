@@ -1,0 +1,5 @@
+#!/bin/sh
+# Every push from a configured checkout must preserve the CAD exchange contract.
+set -eu
+npm run check
+npm run test:interop

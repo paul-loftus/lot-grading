@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write src desktop scripts \"tests/*.ts\" *.config.ts package.json tsconfig.json",
     "format:check": "prettier --check src desktop scripts \"tests/*.ts\" *.config.ts package.json tsconfig.json",
+    "setup:hooks": "node scripts/install-hooks.mjs",
     "test": "node --import tsx --test tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
     "test:interop": "node --import tsx scripts/generate-export-fixtures.ts && node scripts/run-interop.mjs",

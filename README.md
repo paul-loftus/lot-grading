@@ -2,6 +2,8 @@
 
 A focused **macOS and Windows desktop drawing workspace** for residential lots. Create and manage local projects, draw elevated linework, save portable project files, and export a DXF drawing for AutoCAD / Civil 3D.
 
+The primary export target is **Civil 3D 2025**. Native Windows, Intel Mac, and Apple Silicon Mac application tests have passed; the separate receiving check in Civil 3D 2025 is still required.
+
 ## Run the desktop app
 
 Requires Node.js **22.12 or newer** and npm. From this folder:
@@ -62,6 +64,8 @@ npm run test:interop
 npx playwright install chromium
 npm run test:e2e
 ```
+
+After installing the independent reader, run `npm run setup:hooks` to require the build and DXF checks before local Git pushes. CI runs the native matrix separately. GitHub's current plan does not support required branch-protection checks on this private repository.
 
 The end-to-end suite exercises project management, every drawing tool, editing, undo/redo, project save/open, export, and native desktop persistence/dialogs. The CI also launches each packaged executable. [V0 acceptance checklist](docs/V0-ACCEPTANCE.md) records verification scope and remaining manual checks.
 

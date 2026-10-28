@@ -63,6 +63,8 @@ The drawing model must stay independent of canvas display transformations. Panni
 
 The application is packaged with `@electron/packager`. A package is a folder containing the native executable and its supporting files, rather than an installer:
 
+Production builds collect the installed JavaScript dependency licenses into `dist/THIRD_PARTY_NOTICES.txt`. Packaging includes that file and the target Electron distribution's LICENSE/Chromium notices in the application resources, and fails if those notices are missing from the final bundle.
+
 ```sh
 npm run package -- --platform=darwin --arch=arm64
 npm run package -- --platform=darwin --arch=x64
@@ -97,7 +99,15 @@ Do not add a draftable entity that disappears during export. Reject an unsupport
 
 Fixtures are a compatibility contract. Investigate a failure before changing one. An intentional contract revision needs a documented receiving impact and a real Civil 3D check if the change affects the DXF profile. The unit and independent-reader gates reduce regressions; they cannot prove every future change correct.
 
-The workflow's required-check setting is a GitHub repository rule, separate from the checked-in YAML. If protected-branch rules are enabled, require all three `Verify …` jobs before merging changes to `main`.
+The workflow's required-check setting is a GitHub repository rule, separate from the checked-in YAML. GitHub currently rejects private-repository branch protection on this account's plan, so required server-side checks are not configured. The repository remains private. If protected-branch rules become available, require all three `Verify …` jobs before merging changes to `main`.
+
+After setting up the independent DXF reader, install the local pre-push gate once per checkout:
+
+```sh
+npm run setup:hooks
+```
+
+It runs `npm run check` and `npm run test:interop` before a push. The setup command preserves an existing custom hooks configuration by stopping instead of replacing it. This local guard complements CI; it does not enforce rules on other clones or changes made in GitHub's web interface.
 
 ## Architecture changes from the research brief
 

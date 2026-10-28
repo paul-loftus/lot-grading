@@ -4,6 +4,12 @@
 
 This checklist defines the first executable drafting release. It distinguishes an implemented feature, automated evidence, native-platform evidence, and a real Civil 3D receiving test. A completed test plan or a packaged executable is not proof that the application has run on that operating system.
 
+## Recorded evidence
+
+For application commit `eb828d30564699220814748ffaefd8b64309655f`, the [native CI run](https://github.com/paul-loftus/lot-grading/actions/runs/40425455328) passed on **Windows x64, macOS Intel, and macOS Apple Silicon**. All three jobs passed core/export tests, independent DXF comparisons, browser/desktop workflows, packaging, and the test against the packaged executable. The suite includes focused inspector edits committed before native-menu export and before closing the app.
+
+The receiving target is **Civil 3D 2025**. Its actual DXF open/AUDIT/control-point test remains pending; the independent reader and native app tests are separate evidence. Later commits must pass the same matrix before replacing the tested bundles.
+
 ## Requirement checklist
 
 | Requirement | Evidence to collect |

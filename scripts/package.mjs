@@ -12,6 +12,8 @@ await rm(stage, { recursive: true, force: true });
 await mkdir(stage, { recursive: true });
 await cp('dist', path.join(stage, 'dist'), { recursive: true });
 await cp('dist-desktop', path.join(stage, 'dist-desktop'), { recursive: true });
+const runtimeNotices = path.join(stage, 'runtime-notices');
+await mkdir(runtimeNotices, { recursive: true });
 const original = JSON.parse(await readFile('package.json', 'utf8'));
 await writeFile(
   path.join(stage, 'package.json'),
@@ -44,5 +46,30 @@ const outputs = await packager({
   prune: false,
   executableName: 'LotGrade',
   appVersion: original.version,
+  // The macOS Electron ZIP keeps these notices beside Electron.app. Move them
+  // into resources before finalizing the app so an app-only ZIP retains them.
+  afterExtract: [
+    async ({ buildPath }) => {
+      for (const filename of ['LICENSE', 'LICENSES.chromium.html']) {
+        await cp(path.join(buildPath, filename), path.join(runtimeNotices, filename));
+      }
+    },
+  ],
+  extraResource: [path.resolve('dist/THIRD_PARTY_NOTICES.txt'), runtimeNotices],
 });
-for (const output of outputs) console.log(`Packaged ${output}`);
+for (const output of outputs) {
+  const resources =
+    platform === 'darwin'
+      ? path.join(output, 'LotGrade.app', 'Contents', 'Resources')
+      : path.join(output, 'resources');
+  for (const filename of [
+    'THIRD_PARTY_NOTICES.txt',
+    'runtime-notices/LICENSE',
+    'runtime-notices/LICENSES.chromium.html',
+  ]) {
+    if (!(await readFile(path.join(resources, filename))).length) {
+      throw new Error(`Missing packaged notice: ${filename}`);
+    }
+  }
+  console.log(`Packaged ${output} with dependency and runtime notices`);
+}
