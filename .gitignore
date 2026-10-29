@@ -16,3 +16,14 @@
 *.tmp
 *.bak
 *~
+
+# Application builds and test output
+node_modules/
+dist/
+dist-desktop/
+release/
+.package/
+playwright-report/
+test-results/
+tests/.generated/
+.venv/

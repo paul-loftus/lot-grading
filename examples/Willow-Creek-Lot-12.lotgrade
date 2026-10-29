@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 1,
+  "id": "willow-creek-lot-12",
+  "name": "Willow Creek · Lot 12",
+  "description": "An example lot to explore the drawing tools. All elevations are illustrative.",
+  "units": "feet",
+  "createdAt": "2026-10-26T00:00:00.000Z",
+  "updatedAt": "2026-10-26T00:00:00.000Z",
+  "entities": [
+    {
+      "id": "willow-lot-boundary",
+      "kind": "boundary",
+      "name": "Lot 12 boundary",
+      "points": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 100
+        },
+        {
+          "x": 90,
+          "y": 0,
+          "z": 100
+        },
+        {
+          "x": 90,
+          "y": 125,
+          "z": 100
+        },
+        {
+          "x": 0,
+          "y": 125,
+          "z": 100
+        }
+      ],
+      "closed": true,
+      "layer": "FG-LIMIT"
+    },
+    {
+      "id": "willow-home-footprint",
+      "kind": "building",
+      "name": "Proposed home",
+      "points": [
+        {
+          "x": 23,
+          "y": 39,
+          "z": 103
+        },
+        {
+          "x": 66,
+          "y": 39,
+          "z": 103
+        },
+        {
+          "x": 66,
+          "y": 80,
+          "z": 103
+        },
+        {
+          "x": 23,
+          "y": 80,
+          "z": 103
+        }
+      ],
+      "closed": true,
+      "layer": "BUILDING"
+    },
+    {
+      "id": "willow-driveway-west",
+      "kind": "polyline",
+      "name": "Driveway edge",
+      "points": [
+        {
+          "x": 28,
+          "y": 0,
+          "z": 101
+        },
+        {
+          "x": 28,
+          "y": 32,
+          "z": 101
+        },
+        {
+          "x": 33,
+          "y": 39,
+          "z": 101
+        }
+      ],
+      "closed": false,
+      "layer": "FG-BREAKLINE"
+    },
+    {
+      "id": "willow-driveway-east",
+      "kind": "polyline",
+      "name": "Driveway edge",
+      "points": [
+        {
+          "x": 52,
+          "y": 0,
+          "z": 101
+        },
+        {
+          "x": 52,
+          "y": 32,
+          "z": 101
+        },
+        {
+          "x": 48,
+          "y": 39,
+          "z": 101
+        }
+      ],
+      "closed": false,
+      "layer": "FG-BREAKLINE"
+    },
+    {
+      "id": "willow-contour-100",
+      "kind": "contour",
+      "name": "Contour 100",
+      "points": [
+        {
+          "x": 0,
+          "y": 13,
+          "z": 100
+        },
+        {
+          "x": 18,
+          "y": 15,
+          "z": 100
+        },
+        {
+          "x": 36,
+          "y": 17,
+          "z": 100
+        },
+        {
+          "x": 61,
+          "y": 16,
+          "z": 100
+        },
+        {
+          "x": 90,
+          "y": 11,
+          "z": 100
+        }
+      ],
+      "closed": false,
+      "layer": "FG-CONT-MINOR"
+    },
+    {
+      "id": "willow-contour-101",
+      "kind": "contour",
+      "name": "Contour 101",
+      "points": [
+        {
+          "x": 0,
+          "y": 28,
+          "z": 101
+        },
+        {
+          "x": 12,
+          "y": 30,
+          "z": 101
+        },
+        {
+          "x": 20,
+          "y": 35,
+          "z": 101
+        },
+        {
+          "x": 20,
+          "y": 84,
+          "z": 101
+        },
+        {
+          "x": 29,
+          "y": 91,
+          "z": 101
+        },
+        {
+          "x": 63,
+          "y": 91,
+          "z": 101
+        },
+        {
+          "x": 72,
+          "y": 83,
+          "z": 101
+        },
+        {
+          "x": 74,
+          "y": 35,
+          "z": 101
+        },
+        {
+          "x": 90,
+          "y": 26,
+          "z": 101
+        }
+      ],
+      "closed": false,
+      "layer": "FG-CONT-MINOR"
+    },
+    {
+      "id": "willow-contour-102",
+      "kind": "contour",
+      "name": "Contour 102",
+      "points": [
+        {
+          "x": 0,
+          "y": 48,
+          "z": 102
+        },
+        {
+          "x": 12,
+          "y": 49,
+          "z": 102
+        },
+        {
+          "x": 15,
+          "y": 85,
+          "z": 102
+        },
+        {
+          "x": 26,
+          "y": 98,
+          "z": 102
+        },
+        {
+          "x": 65,
+          "y": 99,
+          "z": 102
+        },
+        {
+          "x": 79,
+          "y": 86,
+          "z": 102
+        },
+        {
+          "x": 82,
+          "y": 47,
+          "z": 102
+        },
+        {
+          "x": 90,
+          "y": 44,
+          "z": 102
+        }
+      ],
+      "closed": false,
+      "layer": "FG-CONT-MINOR"
+    },
+    {
+      "id": "willow-contour-103",
+      "kind": "contour",
+      "name": "Contour 103",
+      "points": [
+        {
+          "x": 0,
+          "y": 106,
+          "z": 103
+        },
+        {
+          "x": 24,
+          "y": 112,
+          "z": 103
+        },
+        {
+          "x": 49,
+          "y": 114,
+          "z": 103
+        },
+        {
+          "x": 71,
+          "y": 110,
+          "z": 103
+        },
+        {
+          "x": 90,
+          "y": 101,
+          "z": 103
+        }
+      ],
+      "closed": false,
+      "layer": "FG-CONT-MINOR"
+    },
+    {
+      "id": "willow-front-threshold",
+      "kind": "point",
+      "name": "Front threshold",
+      "points": [
+        {
+          "x": 44.5,
+          "y": 39,
+          "z": 103.5
+        }
+      ],
+      "closed": false,
+      "layer": "FG-SPOT"
+    },
+    {
+      "id": "willow-street-tie-in",
+      "kind": "point",
+      "name": "Street tie-in",
+      "points": [
+        {
+          "x": 44.5,
+          "y": 0,
+          "z": 99.5
+        }
+      ],
+      "closed": false,
+      "layer": "FG-SPOT"
+    }
+  ],
+  "view": {
+    "centerX": 45,
+    "centerY": 62.5,
+    "scale": 4.5
+  },
+  "settings": {
+    "gridSize": 1,
+    "snapToGrid": true,
+    "contourInterval": 1
+  }
+}

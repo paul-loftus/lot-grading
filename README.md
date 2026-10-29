@@ -1,43 +1,76 @@
-# Residential lot grading software — research
+# LotGrade · v0
 
-Research date: **October 26, 2026**. This repository contains a product and engineering research brief, not an implemented or validated grading application.
+A focused **macOS and Windows desktop drawing workspace** for residential lots. Create and manage local projects, draw elevated linework, save portable project files, and export a DXF drawing for AutoCAD / Civil 3D.
 
-## Recommended approach
+The primary export target is **Civil 3D 2025**. Native Windows, Intel Mac, and Apple Silicon Mac application tests have passed; the separate receiving check in Civil 3D 2025 is still required.
 
-Build a **standalone, local-first desktop tool for designing residential finished-ground surfaces**, with contours generated from that surface. Give the designer a small set of meaningful controls: building pads, spot elevations, breaklines, yard slopes, swales, driveways, grading limits, and tie-ins to existing ground.
+## Run the desktop app
 
-Deliver **DXF contour linework and LandXML 1.2 TIN surfaces together**. DXF satisfies the immediate need to open contours in Civil 3D; LandXML carries the terrain mesh so the receiving designer does not have to reconstruct it from contours. These are distinct deliverables, and neither preserves this application's full design history. Autodesk documents surface import in its [LandXML support reference](https://help.autodesk.com/cloudhelp/2026/ENG/Civil3D-UserGuide/files/GUID-4D10ABA5-5EA0-41A8-BB61-C3F446CE7C6B.htm).
+Requires Node.js **22.12 or newer** and npm. From this folder:
 
-For a Windows-first professional product, the recommended starting stack is **C# / .NET 10, WPF, and SkiaSharp for the plan canvas**, with a headless engineering core and a replaceable triangulation adapter. Start the geometry evaluation with the C++ CDT library behind a small C interface; compare its managed port before accepting native deployment complexity. This is a recommendation based on the expected Civil 3D audience, not a confirmed platform requirement. If macOS is required at launch, revisit the UI framework before implementation.
+```sh
+npm ci
+npm start
+```
 
-The first development milestone should be a **small, verifiable Civil 3D export experiment**, followed by one complete detached-home grading workflow. Add townhouse and multifamily workflows in stages. Keep whole-site optimization, direct DWG support, and full stormwater simulation outside the first release.
+`npm start` builds and launches the desktop application. No server, account, or Python runtime is needed to use the app. Projects are stored in the application's local user-data directory. **Save project** writes to that library; **Save project as…** writes a portable `.lotgrade` copy through a native file dialog.
 
-## Research map
+For a browser development preview, run `npm run dev` and open the local address it prints. Browser projects are stored in that browser, separately from desktop projects. Use `.lotgrade` copies to move projects between environments or computers.
 
-| README | Use it to answer |
-| --- | --- |
-| [01 · Product and market](research/01-product-and-market/README.md) | Who is this for, what already exists, and how can it be better? |
-| [02 · Grading workflows](research/02-grading-workflows/README.md) | What must the software understand about real lot grading? |
-| [03 · Surface and contour engine](research/03-surface-and-contour-engine/README.md) | How should grading, triangulation, contours, drainage checks, and volumes work? |
-| [04 · Civil 3D interoperability](research/04-civil3d-interoperability/README.md) | What should be imported/exported, and how should compatibility be proved? |
-| [05 · Architecture and stack](research/05-architecture-and-stack/README.md) | Which languages, frameworks, modules, and application structure should be used? |
-| [06 · User experience](research/06-user-experience/README.md) | How can the tool stay fast and uncluttered? |
-| [07 · Data and coordinates](research/07-data-and-coordinates/README.md) | How should projects, units, elevations, references, and coordinate systems be stored? |
-| [08 · Validation and testing](research/08-validation-and-testing/README.md) | How can we tell whether the product is correct and trustworthy? |
-| [09 · Libraries and licensing](research/09-libraries-and-licensing/README.md) | Which dependencies are candidates, and what adoption issues matter? |
-| [10 · Development roadmap](research/10-development-roadmap/README.md) | What should be built first, by whom, and with what exit criteria? |
-| [11 · Risks and open questions](research/11-risks-and-open-questions/README.md) | What could invalidate the approach, and how should it be investigated? |
-| [12 · Sources](research/12-sources/README.md) | Where is the primary evidence, and what could not be verified? |
+## What works in v0
 
-Suggested first read: **01 → 02 → 04 → 05 → 10**. Use 03, 07, and 08 together when implementing the engine.
+- Project library: create, open, search, sort, rename, duplicate, delete with confirmation, and import saved project files.
+- Drawing tools: polylines, constant-elevation contours, polygon/rectangular lot boundaries, building rectangles, and spot elevations.
+- Editing: selection, moving features, numeric elevation/vertex editing, custom DXF layers, undo/redo, grid snapping, pan, zoom, and fit drawing.
+- Local saving, portable `.lotgrade` save/open, and elevation-preserving **DXF R2013 export** for every available drawing tool.
+- Explicit meters, international feet, and US survey feet; exported coordinates remain in project units with no origin shift or Z flattening.
 
-## How to interpret the findings
+Explore the included example from the project dashboard. It is illustrative linework, not an engineered grading design.
 
-- **Evidence** describes a capability or limitation supported by a linked primary source. Vendor claims are identified as vendor claims; competitor products were not benchmarked.
-- **Recommendation** describes the proposed product or implementation. Architecture, algorithms, workflow priorities, and acceptance targets are engineering judgments.
-- **Proposed target / estimate** is a starting point for experiments, not measured product performance or a delivery commitment.
-- **Open question** needs customer evidence, an engineering decision, a license review, or a real file/application test.
+The matching [sample project and DXF](examples/README.md) include known coordinates and elevations for a real Civil 3D receiving check.
 
-Working assumptions: professional civil/site designers are the initial users; US residential work is the first research context; existing survey-quality terrain and reference linework are supplied; Civil 3D remains the downstream documentation environment. Country, target versions, budget, team, platform, and initial housing type remain unconfirmed.
+## Civil 3D export is a release requirement
 
-No Civil 3D installation, real project files, user interviews, library benchmarks, or engineering sign-off were available during this research. In particular, **compatibility is a documented route to validate, not a tested promise**. The [risk register](research/11-risks-and-open-questions/README.md) and [roadmap](research/10-development-roadmap/README.md) turn those gaps into concrete next steps.
+**Export DXF** writes the current in-memory project through the same export module on both platforms. A project-library save failure does not prevent saving a portable copy or exporting valid work.
+
+The export contract has type-level coverage for every drawing kind, frozen geometry/unit fixtures, regression tests, and an **independent ezdxf reader** that verifies fresh output. CI runs these checks and desktop workflows on macOS Apple Silicon, macOS Intel, and Windows before publishing build artifacts. Packaging also runs the export checks. See [Civil 3D import instructions and limits](docs/CIVIL3D.md) and the [development/export-change policy](docs/DEVELOPMENT.md).
+
+These checks guard against regressions; they do not replace actual receiving tests in Civil 3D. No native Civil 3D import is claimed until that validation is recorded. DXF contains elevated drawing entities and static labels; it is not a native Civil 3D TIN or live grading model.
+
+## Build desktop bundles
+
+The build-time independent-reader gate requires Python 3.10+ and ezdxf. Create a local test environment first:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+```
+
+On Windows, use `python -m venv .venv` and `.venv\Scripts\python -m pip install -r requirements-dev.txt`. The gate discovers this environment automatically; `PYTHON` can override it.
+
+```sh
+npm run package -- --platform=darwin --arch=arm64
+npm run package -- --platform=darwin --arch=x64
+npm run package -- --platform=win32 --arch=x64
+```
+
+Bundles appear in `release/`. On macOS, open `LotGrade.app`. On Windows, open `LotGrade.exe` from its complete application folder; do not copy the EXE by itself. V0 bundles are unsigned development builds. macOS signing/notarization and Windows installer distribution are later release tasks.
+
+## Validate changes
+
+```sh
+npm run check
+npm run test:interop
+npx playwright install chromium
+npm run test:e2e
+```
+
+After installing the independent reader, run `npm run setup:hooks` to require the build and DXF checks before local Git pushes. CI runs the native matrix separately. GitHub's current plan does not support required branch-protection checks on this private repository.
+
+The end-to-end suite exercises project management, every drawing tool, editing, undo/redo, project save/open, export, and native desktop persistence/dialogs. The CI also launches each packaged executable. [V0 acceptance checklist](docs/V0-ACCEPTANCE.md) records verification scope and remaining manual checks.
+
+## Scope and next steps
+
+V0 is the drawing and exchange foundation. Automated grading, terrain import/triangulation, drainage validation, earthwork volumes, and LandXML surface export require subsequent engineering work. The architecture keeps the model, project persistence, drawing workspace, and CAD exporter separate so those features can grow around the protected exchange contract.
+
+The original product and engineering research is preserved in the [research index](research/README.md), with 12 topic READMEs and primary sources. Its earlier Windows-first stack recommendation is superseded for this implementation by the explicit macOS + Windows requirement and the Electron/React/TypeScript decision in [development notes](docs/DEVELOPMENT.md).
