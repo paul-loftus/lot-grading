@@ -17,6 +17,8 @@ npm start
 
 For a browser development preview, run `npm run dev` and open the local address it prints. Browser projects are stored in that browser, separately from desktop projects. Use `.lotgrade` copies to move projects between environments or computers.
 
+For step-by-step drawing instructions, follow the **[LotGrade tutorial](docs/tutorial/README.md)**. It covers a practice lot, lines, contour elevations, curve approximations, exact endpoint connections, editing, saving, and DXF export, with a keyboard reference and troubleshooting tips.
+
 ## What works in v0
 
 - Project library: create, open, search, sort, rename, duplicate, delete with confirmation, and import saved project files.
