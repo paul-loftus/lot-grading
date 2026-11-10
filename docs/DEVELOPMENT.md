@@ -46,7 +46,19 @@ npm run test:interop
 
 Set `PYTHON` if the test should use a particular interpreter. For example, on macOS `PYTHON=.venv/bin/python npm run test:interop`; in PowerShell set `$env:PYTHON = '.venv\Scripts\python.exe'` first. Test-generated files are temporary artifacts, not the regression specification.
 
-The independent check should verify the writer's actual output geometry, elevations, layers, closed state, units, and reader audit result. A successful read is necessary but insufficient: all those properties must also agree with the fixture's expected values. It still does not replace a real Civil 3D import.
+The independent check should verify the writer's actual output geometry, elevations, layers, closed state, units, and reader audit result. For curves, compare each signed bulge and independently reconstructed arc geometry as well as endpoints: endpoint-only checks would also accept the wrong straight chord. A successful read is necessary but insufficient: all those properties must also agree with the fixture's expected values. It still does not replace a real Civil 3D import.
+
+## Curved path geometry and file versions
+
+Circular curves are path segments on the existing `polyline`, `contour`, and polygon `boundary` kinds. An optional `DrawingEntity.bulges` array stores the signed `tan(sweep / 4)` value for each outgoing vertex segment. Omitted/zero values mean straight. The final entry of an open path is zero; a closed path's final entry belongs to the closing edge. Building rectangle and spot creation are unchanged.
+
+Use the shared geometry module for three-point construction, exact arc paths, length/area, and curve-aware bounds. Do not derive engineering measurements from screen paths, sampled display chords, or endpoint-only bounding boxes. Thumbnail rendering, fit, and DXF extents must use the same source geometry.
+
+Paths containing arcs must have a single Z throughout. Preserve varying-Z straight paths, but reject adding a curve to one without an explicit change to a common elevation. The inspector changes all Z values together when editing an existing curved path. Do not flatten or tessellate implicitly to get past validation.
+
+Project schema 1 remains supported for legacy straight drawings. The workspace upgrades a project to schema 2 when it gains nonzero curve segments; schema 2 remains sticky afterward. Schema 1 files containing nonzero bulges are invalid, and unsupported versions fail clearly. Old Rev 0 readers reject schema 2 instead of opening an arc as a chord. Keep `.lotgrade` schema versioning separate from DXF versioning.
+
+Export contract 2 adds LWPOLYLINE group 42 bulges at common group 38 elevation while retaining ASCII R2013/AC1027. Legacy straight-only exports remain byte-identical. Test clockwise/counterclockwise, semicircle/major arc, mixed line/arc, curved closing edges, large coordinates, invalid geometry, schema boundaries, and save/reopen/export. See the [implementation research](../research/13-arcs-and-curves/README.md) for primary sources and formulas.
 
 ## Browser and desktop behavior
 
@@ -73,11 +85,11 @@ npm run package -- --platform=win32 --arch=x64
 
 Expected output folders:
 
-| Platform | Output | Executable |
-| --- | --- | --- |
+| Platform            | Output                           | Executable     |
+| ------------------- | -------------------------------- | -------------- |
 | macOS Apple Silicon | `release/LotGrade-darwin-arm64/` | `LotGrade.app` |
-| macOS Intel | `release/LotGrade-darwin-x64/` | `LotGrade.app` |
-| Windows x64 | `release/LotGrade-win32-x64/` | `LotGrade.exe` |
+| macOS Intel         | `release/LotGrade-darwin-x64/`   | `LotGrade.app` |
+| Windows x64         | `release/LotGrade-win32-x64/`    | `LotGrade.exe` |
 
 Distribute the entire output folder, not just the Windows `.exe`. For macOS distribution, archive the `.app` with a tool that preserves executable permissions and bundle structure. CI uses `ditto` for macOS and `Compress-Archive` for the Windows application folder before uploading a platform ZIP. Download and extract that inner ZIP; raw artifact storage does not preserve POSIX permissions. Locally built v0 packages are development artifacts unless signed/notarized through a configured release process.
 
@@ -99,7 +111,7 @@ Do not add a draftable entity that disappears during export. Reject an unsupport
 
 Fixtures are a compatibility contract. Investigate a failure before changing one. An intentional contract revision needs a documented receiving impact and a real Civil 3D check if the change affects the DXF profile. The unit and independent-reader gates reduce regressions; they cannot prove every future change correct.
 
-The workflow's required-check setting is a GitHub repository rule, separate from the checked-in YAML. GitHub currently rejects private-repository branch protection on this account's plan, so required server-side checks are not configured. The repository remains private. If protected-branch rules become available, require all three `Verify …` jobs before merging changes to `main`.
+The workflow's required-check setting is a GitHub repository rule, separate from the checked-in YAML. The repository is public; the earlier private-repository plan restriction is no longer its visibility state. Check the repository's actual rule settings before claiming remote enforcement. When configuring required checks, require all three `Verify …` jobs before merging changes to `main`.
 
 After setting up the independent DXF reader, install the local pre-push gate once per checkout:
 

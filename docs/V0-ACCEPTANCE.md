@@ -10,20 +10,27 @@ For application commit `eb828d30564699220814748ffaefd8b64309655f`, the [native C
 
 The receiving target is **Civil 3D 2025**. Its actual DXF open/AUDIT/control-point test remains pending; the independent reader and native app tests are separate evidence. Later commits must pass the same matrix before replacing the tested bundles.
 
+The later circular-arc update uses project schema 2 for curve-bearing drawings and export contract 2. The baseline CI evidence above predates that update and does not establish that its curves have passed native-platform or Civil 3D receiving tests. Record the updated revision and actual results separately.
+
+For the curve implementation developed from `5c7a5d6`, local verification on **October 30, 2026** passed formatting, typechecking, **46 unit tests**, production build, all **7 independent DXF checks**, and **11 browser/native application workflows**. An isolated macOS Apple Silicon bundle built with the existing packaging script also passed both native desktop tests, including focused radius edits committed before export and exact curve reopening. Running the original `rev-0` project reader against both file versions confirmed that it accepts legacy drawings and rejects curved schema 2 files.
+
+Those are local macOS results. Updated Windows/Intel Mac CI evidence and the separate Civil 3D 2025 receiving test are still required before claiming those checks passed for curves.
+
 ## Requirement checklist
 
-| Requirement | Evidence to collect |
-| --- | --- |
-| Execute on macOS | Launch the production Electron app on macOS; interact with its project and drawing screens; verify a packaged `.app` exists |
-| Execute on Windows | Run desktop tests on Windows, launch the packaged `.exe`, and preserve the exact CI run/build result |
-| Project management | Create, open, rename, duplicate/delete where supported, and return from a drawing to the project list without losing saved data |
-| Drawing interface | Pan/zoom a world-coordinate canvas, inspect coordinates, select entities, and distinguish draft versus committed geometry |
-| Basic tools | Draw polylines, elevation contours, lot boundaries, building outlines, and spot points; finish/cancel appropriately |
-| Edit and revise | Change supported properties, delete a selected entity, and exercise undo/redo without corrupting the project |
-| Save/open | Save a native project file, reopen it in a fresh application session, and compare geometry, units, and metadata |
-| Civil 3D export | Export every supported kind; independently read generated DXF and compare geometry/elevations/units/layers |
-| Export remains protected | Run core/export regression and independent-reader gates on every platform and before packaging |
-| Actual receiving behavior | Open a generated DXF in the targeted Civil 3D version and compare known control values; record the version/build and result |
+| Requirement               | Evidence to collect                                                                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Execute on macOS          | Launch the production Electron app on macOS; interact with its project and drawing screens; verify a packaged `.app` exists               |
+| Execute on Windows        | Run desktop tests on Windows, launch the packaged `.exe`, and preserve the exact CI run/build result                                      |
+| Project management        | Create, open, rename, duplicate/delete where supported, and return from a drawing to the project list without losing saved data           |
+| Drawing interface         | Pan/zoom a world-coordinate canvas, inspect coordinates, select entities, and distinguish draft versus committed geometry                 |
+| Basic tools               | Draw polylines, elevation contours, lot boundaries, building outlines, and spot points; finish/cancel appropriately                       |
+| Circular arcs             | Mix Line/Arc segments in polylines, contours, and polygon boundaries; retain radius/direction and exact curvature after edits/save/export |
+| Edit and revise           | Change supported properties, delete a selected entity, and exercise undo/redo without corrupting the project                              |
+| Save/open                 | Save a native project file, reopen it in a fresh application session, and compare geometry, units, and metadata                           |
+| Civil 3D export           | Export every supported kind; independently read generated DXF and compare geometry/elevations/units/layers                                |
+| Export remains protected  | Run core/export regression and independent-reader gates on every platform and before packaging                                            |
+| Actual receiving behavior | Open a generated DXF in the targeted Civil 3D version and compare known control values; record the version/build and result               |
 
 ## Manual end-to-end acceptance
 
@@ -40,6 +47,16 @@ Use a fresh project so sample content cannot conceal missing behavior:
 9. Try opening malformed or unsupported-version project data. It must produce a useful error and preserve the currently open valid project.
 10. Complete the same workflow on both operating systems before claiming cross-platform runtime validation.
 
+For the curve update, also perform these checks:
+
+1. In Polyline and Contour, choose **Arc (3 points)** and draw start → through-point → endpoint. Continue with another arc and then a line in the same draft. Changing segment mode must retain completed segments and discard only an unfinished through-point.
+2. Try finishing while the current arc still needs its endpoint, and try coincident/collinear picks. Existing completed segments must survive and the feedback must explain how to continue.
+3. Draw a polygon boundary with a curved closing edge. Compare its true arc perimeter/area, and fit a major arc whose extrema lie outside the endpoint bounds.
+4. Select the arc away from its chord, move and duplicate it, and exercise undo/redo. In **Segments and curves**, edit radius/direction, convert a straight segment to an arc, and straighten it again.
+5. Change a curved feature's Z and verify all its vertices remain at one elevation. Confirm varying-Z straight polylines still work and cannot receive an arc until explicitly given a common elevation.
+6. Save/reopen/export a schema 2 drawing, open a legacy schema 1 drawing, reject malformed/nonplanar bulges, and confirm an original Rev 0 reader refuses schema 2. Existing straight sample DXFs must remain byte-identical.
+7. Independently inspect exported arc bulges and reconstructed geometry, then perform the curved-path receiving checks in Civil 3D 2025. Record platform, exact source revision, and results rather than inferring them from this checklist.
+
 Use a different file path when comparing two revisions; do not overwrite the only source of expected values. Record the project file, DXF, source commit, application version, OS/architecture, and receiving application build with the result.
 
 ## Export regression contract
@@ -49,6 +66,8 @@ The v0 export contract should cover:
 - Every entity kind offered by the drawing tools.
 - Open versus closed geometry and the order/coordinates of vertices.
 - Constant-elevation contours and varying-elevation linework.
+- Exact clockwise/counterclockwise and major/semicircular arcs, mixed straight/arc segments, and a curved closing edge.
+- Curve-aware extrema, arc lengths, signed closed areas, valid bulge arrays, and rejection of nonplanar curves.
 - Negative, fractional, zero, and nonzero elevations.
 - Large asymmetric X/Y coordinates without axis swaps, translation, or display rounding.
 - Each supported unit declaration, especially international feet versus US survey feet.

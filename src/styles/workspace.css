@@ -866,6 +866,69 @@
 .vertex-details > div {
   padding-top: 15px;
 }
+.canvas-curve-hint {
+  position: absolute;
+  top: 70px;
+  left: 24px;
+  max-width: min(440px, calc(100% - 48px));
+  padding: 10px 13px;
+  border: 1px solid #dce4d3;
+  border-radius: 5px;
+  background: #fffef5f5;
+  color: #59734e;
+  font-size: 11px;
+  line-height: 1.6;
+  pointer-events: none;
+}
+.canvas-curve-hint.has-error,
+.curve-edit-error {
+  color: #97562f;
+  border-color: #d5b69a;
+}
+.curve-edit-error {
+  padding: 10px;
+  border: 1px solid #d5b69a;
+  border-radius: 4px;
+  background: #fff6e9;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.curve-note {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #798b6b;
+  margin: 9px 0 14px;
+}
+.segment-mode > div {
+  flex-wrap: wrap;
+}
+.segment-mode button {
+  white-space: nowrap;
+}
+.curve-segment {
+  padding: 14px 0;
+  border-bottom: 1px solid #e4e9db;
+}
+.curve-select {
+  display: block;
+  margin-bottom: 12px;
+}
+.curve-select > span {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 9px;
+  color: #798b6b;
+}
+.curve-select select {
+  width: 100%;
+  height: 33px;
+  padding: 0 8px;
+  color: #557046;
+  border: 1px solid #dce4d3;
+  border-radius: 4px;
+  background: #fbfcf5;
+  font-size: 10px;
+}
 .vertex-editor {
   display: flex;
   gap: 9px;

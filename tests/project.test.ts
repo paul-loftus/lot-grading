@@ -136,7 +136,7 @@ test('project imports reject scalar, null, and array roots rather than treating 
 });
 
 test('unknown or missing schema versions and unsupported entity kinds are rejected, never discarded', () => {
-  for (const schemaVersion of [undefined, 0, 2, '1']) {
+  for (const schemaVersion of [undefined, 0, 3, '1']) {
     assert.throws(
       () => validateProject({ ...fixture(), schemaVersion }),
       /unsupported project version/i,
@@ -145,6 +145,103 @@ test('unknown or missing schema versions and unsupported entity kinds are reject
   const project = fixture();
   project.entities[0].kind = 'spline' as DrawingEntity['kind'];
   assert.throws(() => parseProject(JSON.stringify(project)), /unsupported drawing object/i);
+});
+
+test('schema 2 curves survive save/open exactly while schema 1 curved files are rejected', () => {
+  const project = createProject('Curved lot');
+  project.schemaVersion = 2;
+  project.entities = [
+    {
+      id: 'curved-boundary',
+      kind: 'boundary',
+      name: 'Curved frontage',
+      layer: 'FG-LIMIT',
+      closed: true,
+      points: [
+        { x: 0, y: 0, z: 103.125 },
+        { x: 10, y: 0, z: 103.125 },
+        { x: 10, y: 10, z: 103.125 },
+      ],
+      bulges: [1, 0, -0.25],
+    },
+  ];
+  const saved = serializeProject(project);
+  assert.deepEqual(parseProject(saved), project);
+  assert.deepEqual(parseProject(saved).entities[0].bulges, [1, 0, -0.25]);
+  assert.throws(
+    () => validateProject({ ...project, schemaVersion: 1 }),
+    /requires project schema version 2/i,
+  );
+  assert.throws(
+    () => exportDxf({ ...project, schemaVersion: 1 }),
+    /requires project schema version 2/i,
+  );
+});
+
+test('malformed, nonplanar, unsupported, and degenerate arc data is rejected before save and export', () => {
+  const base = createProject('Curve validation');
+  base.schemaVersion = 2;
+  base.entities = [
+    {
+      id: 'curve',
+      kind: 'polyline',
+      name: 'Curve',
+      layer: 'CURVE',
+      closed: false,
+      points: [
+        { x: 0, y: 0, z: 5 },
+        { x: 10, y: 0, z: 5 },
+      ],
+      bulges: [1, 0],
+    },
+  ];
+  const mutations: ((project: Project) => void)[] = [
+    (project) => {
+      project.entities[0].bulges = [1];
+    },
+    (project) => {
+      project.entities[0].bulges = [1, 1];
+    },
+    (project) => {
+      project.entities[0].bulges = [NaN, 0];
+    },
+    (project) => {
+      project.entities[0].bulges = [Infinity, 0];
+    },
+    (project) => {
+      project.entities[0].bulges = ['1', 0] as unknown as number[];
+    },
+    (project) => {
+      project.entities[0].bulges = null as unknown as number[];
+    },
+    (project) => {
+      project.entities[0].points[1].z += 1e-9;
+    },
+    (project) => {
+      project.entities[0].points[1] = { ...project.entities[0].points[0] };
+    },
+    (project) => {
+      project.entities[0].bulges = [1e300, 0];
+    },
+    (project) => {
+      project.entities[0].kind = 'point';
+      project.entities[0].points = [project.entities[0].points[0]];
+      project.entities[0].bulges = [0];
+    },
+    (project) => {
+      project.entities[0].kind = 'building';
+      project.entities[0].closed = true;
+      project.entities[0].points.push({ x: 10, y: 10, z: 5 });
+      project.entities[0].bulges = [1, 0, 0];
+    },
+  ];
+  for (const mutate of mutations) {
+    const project = structuredClone(base);
+    mutate(project);
+    assert.throws(() => validateProject(project));
+    assert.throws(() => exportDxf(project));
+  }
+  assert.deepEqual(validateProject(base), base);
 });
 
 test('unsupported unit labels and unsafe project identities are rejected at import', () => {

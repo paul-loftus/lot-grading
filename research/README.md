@@ -2,6 +2,8 @@
 
 Research date: **October 26, 2026**. This is the original pre-implementation research snapshot. The executable v0 and its current verification status are documented in the [application README](../README.md). Statements below about unimplemented or untested features describe the initial research stage.
 
+The [arcs and curves follow-up](13-arcs-and-curves/README.md), added **October 30, 2026**, records the later drawing-tool implementation decision and primary-source research.
+
 ## Recommended approach
 
 Build a **standalone, local-first desktop tool for designing residential finished-ground surfaces**, with contours generated from that surface. Give the designer a small set of meaningful controls: building pads, spot elevations, breaklines, yard slopes, swales, driveways, grading limits, and tie-ins to existing ground.
@@ -14,20 +16,21 @@ The first development milestone should be a **small, verifiable Civil 3D export 
 
 ## Research map
 
-| README | Use it to answer |
-| --- | --- |
-| [01 · Product and market](01-product-and-market/README.md) | Who is this for, what already exists, and how can it be better? |
-| [02 · Grading workflows](02-grading-workflows/README.md) | What must the software understand about real lot grading? |
-| [03 · Surface and contour engine](03-surface-and-contour-engine/README.md) | How should grading, triangulation, contours, drainage checks, and volumes work? |
-| [04 · Civil 3D interoperability](04-civil3d-interoperability/README.md) | What should be imported/exported, and how should compatibility be proved? |
-| [05 · Architecture and stack](05-architecture-and-stack/README.md) | Which languages, frameworks, modules, and application structure should be used? |
-| [06 · User experience](06-user-experience/README.md) | How can the tool stay fast and uncluttered? |
-| [07 · Data and coordinates](07-data-and-coordinates/README.md) | How should projects, units, elevations, references, and coordinate systems be stored? |
-| [08 · Validation and testing](08-validation-and-testing/README.md) | How can we tell whether the product is correct and trustworthy? |
-| [09 · Libraries and licensing](09-libraries-and-licensing/README.md) | Which dependencies are candidates, and what adoption issues matter? |
-| [10 · Development roadmap](10-development-roadmap/README.md) | What should be built first, by whom, and with what exit criteria? |
-| [11 · Risks and open questions](11-risks-and-open-questions/README.md) | What could invalidate the approach, and how should it be investigated? |
-| [12 · Sources](12-sources/README.md) | Where is the primary evidence, and what could not be verified? |
+| README                                                                     | Use it to answer                                                                                         |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [01 · Product and market](01-product-and-market/README.md)                 | Who is this for, what already exists, and how can it be better?                                          |
+| [02 · Grading workflows](02-grading-workflows/README.md)                   | What must the software understand about real lot grading?                                                |
+| [03 · Surface and contour engine](03-surface-and-contour-engine/README.md) | How should grading, triangulation, contours, drainage checks, and volumes work?                          |
+| [04 · Civil 3D interoperability](04-civil3d-interoperability/README.md)    | What should be imported/exported, and how should compatibility be proved?                                |
+| [05 · Architecture and stack](05-architecture-and-stack/README.md)         | Which languages, frameworks, modules, and application structure should be used?                          |
+| [06 · User experience](06-user-experience/README.md)                       | How can the tool stay fast and uncluttered?                                                              |
+| [07 · Data and coordinates](07-data-and-coordinates/README.md)             | How should projects, units, elevations, references, and coordinate systems be stored?                    |
+| [08 · Validation and testing](08-validation-and-testing/README.md)         | How can we tell whether the product is correct and trustworthy?                                          |
+| [09 · Libraries and licensing](09-libraries-and-licensing/README.md)       | Which dependencies are candidates, and what adoption issues matter?                                      |
+| [10 · Development roadmap](10-development-roadmap/README.md)               | What should be built first, by whom, and with what exit criteria?                                        |
+| [11 · Risks and open questions](11-risks-and-open-questions/README.md)     | What could invalidate the approach, and how should it be investigated?                                   |
+| [12 · Sources](12-sources/README.md)                                       | Where is the primary evidence, and what could not be verified?                                           |
+| [13 · Arcs and curves](13-arcs-and-curves/README.md)                       | Which drawing tools need curves, how should users construct them, and how are exact arcs saved/exported? |
 
 Suggested first read: **01 → 02 → 04 → 05 → 10**. Use 03, 07, and 08 together when implementing the engine.
 

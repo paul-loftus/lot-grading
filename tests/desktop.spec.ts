@@ -146,3 +146,114 @@ test('native desktop saves, exports via native dialog, reopens, and flushes on c
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test('native circular arcs commit focused radius edits before export and reopen without flattening', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'lotgrade-native-arcs-'));
+  let application: ElectronApplication | undefined;
+  const launch = async () => {
+    const environment = Object.fromEntries(
+      Object.entries(process.env).filter(
+        ([key, value]) => key !== 'ELECTRON_RUN_AS_NODE' && value !== undefined,
+      ),
+    ) as Record<string, string>;
+    application = await electron.launch({
+      ...(process.env.LOTGRADE_EXECUTABLE
+        ? { executablePath: process.env.LOTGRADE_EXECUTABLE, args: [] }
+        : { args: ['.'] }),
+      env: { ...environment, LOTGRADE_USER_DATA: directory },
+    });
+    return application.firstWindow();
+  };
+  try {
+    let page = await launch();
+    await page.getByRole('button', { name: 'New project', exact: true }).click();
+    await page.getByLabel('Project name').fill('Native arcs');
+    await page.getByRole('button', { name: 'Create project', exact: true }).click();
+    await page.getByTestId('tool-contour').click();
+    await page.getByTestId('drawing-elevation').fill('207.875');
+    await page.getByTestId('drawing-elevation').press('Enter');
+    await page.getByTestId('segment-arc').click();
+    const view = await page.evaluate(async () => (await window.lotgrade!.listProjects())[0].view);
+    const box = await page.getByTestId('drawing-canvas').boundingBox();
+    if (!box) throw new Error('Native canvas is missing.');
+    for (const [x, y] of [
+      [20, 30],
+      [40, 50],
+      [60, 30],
+    ]) {
+      await page.mouse.click(
+        box.x + box.width / 2 + (x - view.centerX) * view.scale,
+        box.y + box.height / 2 - (y - view.centerY) * view.scale,
+      );
+    }
+    await page.keyboard.press('Enter');
+    await expect
+      .poll(() =>
+        page.evaluate(async () => (await window.lotgrade!.listProjects())[0].entities.length),
+      )
+      .toBe(1);
+    await page.getByRole('button', { name: /^Features/ }).click();
+    await page.getByRole('button', { name: /^Contour 1/ }).click();
+    await page.getByText('Segments and curves', { exact: true }).click();
+
+    const exportPath = path.join(directory, 'native-arc.dxf');
+    await application!.evaluate(({ dialog }, file) => {
+      dialog.showSaveDialog = async () => ({ canceled: false, filePath: file });
+    }, exportPath);
+    await page.getByLabel('Radius · segment 1', { exact: true }).fill('25');
+    await application!.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0].webContents.send('menu:action', 'export'),
+    );
+    await expect
+      .poll(async () => {
+        try {
+          return await readFile(exportPath, 'utf8');
+        } catch {
+          return '';
+        }
+      })
+      .toContain('AcDbPolyline');
+    const exported = await readFile(exportPath, 'utf8');
+    const entitySection = exported
+      .split(/0\r?\nSECTION\r?\n2\r?\nENTITIES\r?\n/)[1]
+      .split(/0\r?\nENDSEC/)[0];
+    const bulges = [...entitySection.matchAll(/^42\r?\n([^\r\n]+)$/gm)].map((match) =>
+      Number(match[1]),
+    );
+    expect(bulges).toHaveLength(1);
+    expect(bulges[0]).toBeCloseTo(-0.5, 12);
+    expect(exported).toContain('207.875');
+    const portablePath = path.join(directory, 'native-arc.lotgrade');
+    await application!.evaluate(({ dialog }, file) => {
+      dialog.showSaveDialog = async () => ({ canceled: false, filePath: file });
+    }, portablePath);
+    await page.getByRole('button', { name: 'More save options' }).click();
+    await page.getByRole('button', { name: 'Save project as…' }).click();
+    await expect
+      .poll(async () => {
+        try {
+          return JSON.parse(await readFile(portablePath, 'utf8')).schemaVersion;
+        } catch {
+          return 0;
+        }
+      })
+      .toBe(2);
+    const saved = JSON.parse(await readFile(portablePath, 'utf8'));
+    expect(saved.entities[0].bulges[0]).toBeCloseTo(-0.5, 12);
+    expect(saved.entities[0].points).toEqual([
+      { x: 20, y: 30, z: 207.875 },
+      { x: 60, y: 30, z: 207.875 },
+    ]);
+    await application!.close();
+    application = undefined;
+    page = await launch();
+    await page.getByRole('button', { name: 'Open Native arcs', exact: true }).click();
+    const reopened = await page.evaluate(async () => (await window.lotgrade!.listProjects())[0]);
+    expect(reopened.schemaVersion).toBe(2);
+    expect(reopened.entities).toEqual(saved.entities);
+    await expect(page.getByTestId('feature-path')).toHaveAttribute('d', /A/);
+  } finally {
+    if (application) await application.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});

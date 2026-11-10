@@ -12,11 +12,13 @@ export interface DrawingEntity {
   kind: EntityKind;
   name: string;
   points: Point[];
+  /** Signed tan(sweep / 4) for the segment starting at each vertex; omitted means straight. */
+  bulges?: number[];
   closed: boolean;
   layer: string;
 }
 export interface Project {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   id: string;
   name: string;
   description: string;

@@ -2,7 +2,7 @@
 
 A focused **macOS and Windows desktop drawing workspace** for residential lots. Create and manage local projects, draw elevated linework, save portable project files, and export a DXF drawing for AutoCAD / Civil 3D.
 
-The primary export target is **Civil 3D 2025**. Native Windows, Intel Mac, and Apple Silicon Mac application tests have passed; the separate receiving check in Civil 3D 2025 is still required.
+The primary export target is **Civil 3D 2025**. Baseline native Windows, Intel Mac, and Apple Silicon Mac test evidence is recorded in the [acceptance checklist](docs/V0-ACCEPTANCE.md); later changes must pass the same checks. The separate receiving check in Civil 3D 2025 is still required.
 
 ## Run the desktop app
 
@@ -17,17 +17,22 @@ npm start
 
 For a browser development preview, run `npm run dev` and open the local address it prints. Browser projects are stored in that browser, separately from desktop projects. Use `.lotgrade` copies to move projects between environments or computers.
 
-For step-by-step drawing instructions, follow the **[LotGrade tutorial](docs/tutorial/README.md)**. It covers a practice lot, lines, contour elevations, curve approximations, exact endpoint connections, editing, saving, and DXF export, with a keyboard reference and troubleshooting tips.
+For step-by-step drawing instructions, follow the **[LotGrade tutorial](docs/tutorial/README.md)**. It covers a practice lot, lines, true circular arcs, contour elevations, exact endpoint connections, editing, saving, and DXF export, with a keyboard reference and troubleshooting tips.
 
 ## What works in v0
 
 - Project library: create, open, search, sort, rename, duplicate, delete with confirmation, and import saved project files.
 - Drawing tools: polylines, constant-elevation contours, polygon/rectangular lot boundaries, building rectangles, and spot elevations.
+- Curves: mix straight and exact three-point circular arc segments in polylines, contours, and polygon boundaries; edit segment radius/direction and retain true curves in DXF.
 - Editing: selection, moving features, numeric elevation/vertex editing, custom DXF layers, undo/redo, grid snapping, pan, zoom, and fit drawing.
 - Local saving, portable `.lotgrade` save/open, and elevation-preserving **DXF R2013 export** for every available drawing tool.
 - Explicit meters, international feet, and US survey feet; exported coordinates remain in project units with no origin shift or Z flattening.
 
 Explore the included example from the project dashboard. It is illustrative linework, not an engineered grading design.
+
+Curved features use one elevation for the whole path. Varying-elevation straight polylines remain supported. Arbitrary splines, automatic contour smoothing, and tangent constraints are later features; existing drawings are not automatically converted to curves.
+
+Curve-bearing `.lotgrade` files use project schema 2 and require this curve-capable application. Legacy schema 1 drawings still open. The original `rev-0` tag and its older bundles reject schema 2 instead of silently replacing curves with straight segments.
 
 The matching [sample project and DXF](examples/README.md) include known coordinates and elevations for a real Civil 3D receiving check.
 
@@ -67,7 +72,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-After installing the independent reader, run `npm run setup:hooks` to require the build and DXF checks before local Git pushes. CI runs the native matrix separately. GitHub's current plan does not support required branch-protection checks on this private repository.
+After installing the independent reader, run `npm run setup:hooks` to require the build and DXF checks before local Git pushes. CI runs the native matrix separately; required-check enforcement is controlled by GitHub repository rules, not by the workflow file alone.
 
 The end-to-end suite exercises project management, every drawing tool, editing, undo/redo, project save/open, export, and native desktop persistence/dialogs. The CI also launches each packaged executable. [V0 acceptance checklist](docs/V0-ACCEPTANCE.md) records verification scope and remaining manual checks.
 
@@ -75,4 +80,4 @@ The end-to-end suite exercises project management, every drawing tool, editing, 
 
 V0 is the drawing and exchange foundation. Automated grading, terrain import/triangulation, drainage validation, earthwork volumes, and LandXML surface export require subsequent engineering work. The architecture keeps the model, project persistence, drawing workspace, and CAD exporter separate so those features can grow around the protected exchange contract.
 
-The original product and engineering research is preserved in the [research index](research/README.md), with 12 topic READMEs and primary sources. Its earlier Windows-first stack recommendation is superseded for this implementation by the explicit macOS + Windows requirement and the Electron/React/TypeScript decision in [development notes](docs/DEVELOPMENT.md).
+The original product and engineering research is preserved in the [research index](research/README.md), with a later [arcs and curves study](research/13-arcs-and-curves/README.md) documenting the tool and export decisions. Its earlier Windows-first stack recommendation is superseded for this implementation by the explicit macOS + Windows requirement and the Electron/React/TypeScript decision in [development notes](docs/DEVELOPMENT.md).

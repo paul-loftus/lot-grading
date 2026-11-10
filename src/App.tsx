@@ -18,6 +18,7 @@ import {
 import Workspace from './components/Workspace';
 import { createDemoProject, createProject, validateProject } from './core/project';
 import { UNIT_LABELS, type Project, type Units } from './core/types';
+import { entityBounds, entitySvgPath } from './core/geometry';
 import { isDesktop, platform } from './platform';
 
 function relativeDate(value: string): string {
@@ -37,20 +38,22 @@ function commitFocusedField(): void {
 }
 function MiniPlan({ project }: { project?: Project }) {
   const entities = project?.entities ?? [];
-  const points = entities.flatMap((entity) => entity.points);
-  const bounds = points.reduce(
-    (b, p) => ({
-      minX: Math.min(b.minX, p.x),
-      minY: Math.min(b.minY, p.y),
-      maxX: Math.max(b.maxX, p.x),
-      maxY: Math.max(b.maxY, p.y),
-    }),
+  const bounds = entities.reduce(
+    (b, entity) => {
+      const extent = entityBounds(entity);
+      return {
+        minX: Math.min(b.minX, extent.minX),
+        minY: Math.min(b.minY, extent.minY),
+        maxX: Math.max(b.maxX, extent.maxX),
+        maxY: Math.max(b.maxY, extent.maxY),
+      };
+    },
     { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
   );
-  const minX = points.length ? bounds.minX : 0;
-  const minY = points.length ? bounds.minY : 0;
-  const width = points.length ? bounds.maxX - minX : 100;
-  const height = points.length ? bounds.maxY - minY : 120;
+  const minX = entities.length ? bounds.minX : 0;
+  const minY = entities.length ? bounds.minY : 0;
+  const width = entities.length ? bounds.maxX - minX : 100;
+  const height = entities.length ? bounds.maxY - minY : 120;
   const margin = Math.max(width, height, 20) * 0.15;
   return (
     <svg
@@ -85,11 +88,9 @@ function MiniPlan({ project }: { project?: Project }) {
             fill="#4a7361"
           />
         ) : (
-          <polyline
+          <path
             key={entity.id}
-            points={[...entity.points, ...(entity.closed ? [entity.points[0]] : [])]
-              .map((p) => `${p.x},${-p.y}`)
-              .join(' ')}
+            d={entitySvgPath(entity, (point) => ({ x: point.x, y: -point.y }), 1)}
             fill={entity.kind === 'building' ? '#dce5d5' : 'none'}
             stroke={entity.kind === 'contour' ? '#8b9f80' : '#45654f'}
             strokeWidth={Math.max(width, height) * 0.006}

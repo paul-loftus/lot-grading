@@ -106,6 +106,56 @@ test('keeps tiny nonzero elevation changes as true 3D geometry', () => {
   assert.ok(tags.some(([code, value]) => code === 30 && value === '100.000000001'));
 });
 
+test('exact circular segments export as LWPOLYLINE bulges with curved extents and unchanged elevations', () => {
+  const project = base();
+  project.schemaVersion = 2;
+  project.entities = [
+    {
+      id: 'semicircle',
+      name: 'Curved contour',
+      kind: 'contour',
+      layer: 'FG-CONT-MINOR',
+      closed: false,
+      points: [
+        { x: 0, y: 0, z: 105.375 },
+        { x: 10, y: 0, z: 105.375 },
+      ],
+      bulges: [1, 0],
+    },
+  ];
+  const before = structuredClone(project);
+  const tags = pairs(exportDxf(project));
+  const entityStart = tags.findIndex(([code, value]) => code === 2 && value === 'ENTITIES');
+  const entityEnd = tags.findIndex(
+    ([code, value], index) => index > entityStart && code === 0 && value === 'ENDSEC',
+  );
+  assert.deepEqual(
+    tags.slice(entityStart, entityEnd).filter(([code]) => code === 42),
+    [[42, '1']],
+  );
+  assert.ok(tags.some(([code, value]) => code === 38 && value === '105.375'));
+  const minimum = tags.findIndex(([code, value]) => code === 9 && value === '$EXTMIN');
+  assert.deepEqual(tags.slice(minimum + 1, minimum + 4), [
+    [10, '0'],
+    [20, '-5'],
+    [30, '105.375'],
+  ]);
+  assert.deepEqual(project, before);
+  const straight = structuredClone(project);
+  straight.entities[0].bulges = [0, 0];
+  const straightTags = pairs(exportDxf(straight));
+  const straightStart = straightTags.findIndex(
+    ([code, value]) => code === 2 && value === 'ENTITIES',
+  );
+  const straightEnd = straightTags.findIndex(
+    ([code, value], index) => index > straightStart && code === 0 && value === 'ENDSEC',
+  );
+  assert.equal(
+    straightTags.slice(straightStart, straightEnd).filter(([code]) => code === 42).length,
+    0,
+  );
+});
+
 test('rejects nonfinite coordinates, unknown units/kinds, malformed shapes, and duplicate IDs', () => {
   const invalid: ((project: Project) => void)[] = [
     (project) => {

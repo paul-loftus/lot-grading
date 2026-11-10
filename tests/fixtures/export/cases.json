@@ -1,5 +1,5 @@
 {
-  "contractVersion": 1,
+  "contractVersion": 2,
   "cases": [
     {
       "name": "all-tools-meters",
@@ -68,6 +68,321 @@
         "view": {"centerX": 0, "centerY": 0, "scale": 8}, "settings": {"gridSize": 1, "snapToGrid": true, "contourInterval": 0.5}
       },
       "expected": {"insunits": 6, "measurement": 1, "primaryEntityCount": 0, "textCount": 0, "lwpolylineCount": 0, "polyline3dCount": 0, "pointCount": 0}
+    },
+    {
+      "name": "circular-arc-paths",
+      "project": {
+        "schemaVersion": 2,
+        "id": "arc-contract",
+        "name": "Exact circular arcs",
+        "description": "Frozen analytic controls cover both arc directions, major sweeps, mixed edges, closing arcs, and global coordinates.",
+        "units": "meters",
+        "createdAt": "2026-10-30T00:00:00.000Z",
+        "updatedAt": "2026-10-30T00:00:00.000Z",
+        "entities": [
+          {
+            "id": "arc-ccw",
+            "kind": "polyline",
+            "name": "Counterclockwise semicircle",
+            "points": [
+              {
+                "x": 10,
+                "y": 0,
+                "z": -2.125
+              },
+              {
+                "x": 30,
+                "y": 0,
+                "z": -2.125
+              }
+            ],
+            "bulges": [
+              1,
+              0
+            ],
+            "closed": false,
+            "layer": "FG-CURVES"
+          },
+          {
+            "id": "arc-cw",
+            "kind": "contour",
+            "name": "Clockwise semicircle",
+            "points": [
+              {
+                "x": 40,
+                "y": 20,
+                "z": 123.75
+              },
+              {
+                "x": 60,
+                "y": 20,
+                "z": 123.75
+              }
+            ],
+            "bulges": [
+              -1,
+              0
+            ],
+            "closed": false,
+            "layer": "FG-CURVES"
+          },
+          {
+            "id": "arc-major-ccw",
+            "kind": "polyline",
+            "name": "Counterclockwise major arc",
+            "points": [
+              {
+                "x": 90,
+                "y": 60,
+                "z": 102.5
+              },
+              {
+                "x": 80,
+                "y": 50,
+                "z": 102.5
+              }
+            ],
+            "bulges": [
+              2.414213562373095,
+              0
+            ],
+            "closed": false,
+            "layer": "FG-CURVES"
+          },
+          {
+            "id": "arc-major-cw",
+            "kind": "polyline",
+            "name": "Clockwise major arc",
+            "points": [
+              {
+                "x": 110,
+                "y": 60,
+                "z": -12.5
+              },
+              {
+                "x": 100,
+                "y": 70,
+                "z": -12.5
+              }
+            ],
+            "bulges": [
+              -2.414213562373095,
+              0
+            ],
+            "closed": false,
+            "layer": "FG-CURVES"
+          },
+          {
+            "id": "arc-boundary",
+            "kind": "boundary",
+            "name": "Mixed boundary with curved closing edge",
+            "points": [
+              {
+                "x": 0,
+                "y": 0,
+                "z": 104
+              },
+              {
+                "x": 20,
+                "y": 0,
+                "z": 104
+              },
+              {
+                "x": 20,
+                "y": 20,
+                "z": 104
+              },
+              {
+                "x": 0,
+                "y": 20,
+                "z": 104
+              }
+            ],
+            "bulges": [
+              0,
+              1,
+              0,
+              1
+            ],
+            "closed": true,
+            "layer": "LOT-CURVES"
+          },
+          {
+            "id": "arc-global",
+            "kind": "polyline",
+            "name": "Global quarter arc and straight edge",
+            "points": [
+              {
+                "x": 2000010.125,
+                "y": 5000000.625,
+                "z": 350.125
+              },
+              {
+                "x": 2000000.125,
+                "y": 5000010.625,
+                "z": 350.125
+              },
+              {
+                "x": 1999990.125,
+                "y": 5000010.625,
+                "z": 350.125
+              }
+            ],
+            "bulges": [
+              0.41421356237309503,
+              0,
+              0
+            ],
+            "closed": false,
+            "layer": "FG-CURVES"
+          }
+        ],
+        "view": {
+          "centerX": 0,
+          "centerY": 0,
+          "scale": 8
+        },
+        "settings": {
+          "gridSize": 1,
+          "snapToGrid": true,
+          "contourInterval": 0.5
+        }
+      },
+      "expected": {
+        "insunits": 6,
+        "measurement": 1,
+        "primaryEntityCount": 6,
+        "textCount": 0,
+        "lwpolylineCount": 6,
+        "polyline3dCount": 0,
+        "pointCount": 0,
+        "arcControls": [
+          {
+            "sourceId": "arc-ccw",
+            "segmentIndex": 0,
+            "center": [
+              20,
+              0,
+              -2.125
+            ],
+            "radius": 10,
+            "sweepDegrees": 180,
+            "midpoint": [
+              20,
+              -10,
+              -2.125
+            ]
+          },
+          {
+            "sourceId": "arc-cw",
+            "segmentIndex": 0,
+            "center": [
+              50,
+              20,
+              123.75
+            ],
+            "radius": 10,
+            "sweepDegrees": 180,
+            "midpoint": [
+              50,
+              30,
+              123.75
+            ]
+          },
+          {
+            "sourceId": "arc-major-ccw",
+            "segmentIndex": 0,
+            "center": [
+              80,
+              60,
+              102.5
+            ],
+            "radius": 10,
+            "sweepDegrees": 270,
+            "midpoint": [
+              72.92893218813452,
+              67.07106781186548,
+              102.5
+            ]
+          },
+          {
+            "sourceId": "arc-major-cw",
+            "segmentIndex": 0,
+            "center": [
+              100,
+              60,
+              -12.5
+            ],
+            "radius": 10,
+            "sweepDegrees": 270,
+            "midpoint": [
+              92.92893218813452,
+              52.928932188134524,
+              -12.5
+            ]
+          },
+          {
+            "sourceId": "arc-boundary",
+            "segmentIndex": 1,
+            "center": [
+              20,
+              10,
+              104
+            ],
+            "radius": 10,
+            "sweepDegrees": 180,
+            "midpoint": [
+              30,
+              10,
+              104
+            ]
+          },
+          {
+            "sourceId": "arc-boundary",
+            "segmentIndex": 3,
+            "center": [
+              0,
+              10,
+              104
+            ],
+            "radius": 10,
+            "sweepDegrees": 180,
+            "midpoint": [
+              -10,
+              10,
+              104
+            ]
+          },
+          {
+            "sourceId": "arc-global",
+            "segmentIndex": 0,
+            "center": [
+              2000000.125,
+              5000000.625,
+              350.125
+            ],
+            "radius": 10,
+            "sweepDegrees": 90,
+            "midpoint": [
+              2000007.196067812,
+              5000007.696067812,
+              350.125
+            ]
+          }
+        ],
+        "extents": {
+          "min": [
+            -10,
+            -10,
+            -12.5
+          ],
+          "max": [
+            2000010.125,
+            5000010.625,
+            350.125
+          ]
+        }
+      }
     }
   ]
 }

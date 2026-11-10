@@ -31,9 +31,11 @@ import {
 } from 'lucide-react';
 import type { DrawingEntity, Point, Project } from '../core/types';
 import { UNIT_SYMBOLS } from '../core/types';
+import { validateProject } from '../core/project';
+import { arcFromBulge, entityLength, entitySignedArea, hasCurves } from '../core/geometry';
 import { platform } from '../platform';
 import { DrawingCanvas } from './DrawingCanvas';
-import type { CanvasHandle, DrawingTool } from './DrawingCanvas';
+import type { CanvasHandle, DrawingTool, SegmentMode } from './DrawingCanvas';
 import '../styles/workspace.css';
 
 export interface WorkspaceProps {
@@ -55,17 +57,17 @@ const TOOL_INFO: Record<DrawingTool, { name: string; hint: string; shortcut: str
   pan: { name: 'Pan', hint: 'Drag to move around the plan. Scroll to zoom.', shortcut: 'H' },
   polyline: {
     name: 'Polyline',
-    hint: 'Click to add vertices. Enter or double-click to finish. Esc to cancel.',
+    hint: 'Choose Line or Arc segments. Enter to finish. Esc to cancel.',
     shortcut: 'L',
   },
   contour: {
     name: 'Contour',
-    hint: 'Set the elevation, then click to trace a contour. Enter to finish.',
+    hint: 'Set the elevation, then trace with Line or Arc. Enter to finish.',
     shortcut: 'C',
   },
   boundary: {
     name: 'Lot boundary',
-    hint: 'Click boundary corners. Click the first point or Enter to close.',
+    hint: 'Trace with Line or Arc. Click the first point or Enter to close.',
     shortcut: 'B',
   },
   'boundary-rect': {
@@ -111,6 +113,7 @@ function NumericField({
   min,
   step = 'any',
   testId,
+  commitUnchanged = false,
 }: {
   value: number;
   label: string;
@@ -119,10 +122,15 @@ function NumericField({
   min?: number;
   step?: string;
   testId?: string;
+  commitUnchanged?: boolean;
 }) {
   const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(value)), [value]);
-  const commit = () => {
+  const dirty = useRef(false);
+  useEffect(() => {
+    setText(String(value));
+    dirty.current = false;
+  }, [value]);
+  const commit = (force = false) => {
     const number = Number(text);
     if (
       text.trim() &&
@@ -130,8 +138,10 @@ function NumericField({
       Math.abs(number) <= 1e12 &&
       (min === undefined || number >= min)
     ) {
-      if (number !== value) onCommit(number);
+      if (number !== value || (commitUnchanged && (dirty.current || force))) onCommit(number);
+      setText(String(value));
     } else setText(String(value));
+    dirty.current = false;
   };
   return (
     <label className="numeric-field">
@@ -144,10 +154,16 @@ function NumericField({
           value={text}
           min={min}
           step={step}
-          onChange={(event) => setText(event.target.value)}
-          onBlur={commit}
+          onChange={(event) => {
+            dirty.current = true;
+            setText(event.target.value);
+          }}
+          onBlur={() => commit()}
           onKeyDown={(event) => {
-            if (event.key === 'Enter') event.currentTarget.blur();
+            if (event.key === 'Enter') {
+              if (commitUnchanged && Number(text) === value) commit(true);
+              event.currentTarget.blur();
+            }
           }}
         />
         {suffix && <span className="input-suffix">{suffix}</span>}
@@ -222,10 +238,13 @@ export function Workspace({
   saveStatus,
 }: WorkspaceProps) {
   const [tool, setTool] = useState<DrawingTool>('select');
+  const [segmentMode, setSegmentMode] = useState<SegmentMode>('line');
   const [elevation, setElevation] = useState(100);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [cursor, setCursor] = useState<Point | null>(null);
   const [draftCount, setDraftCount] = useState(0);
+  const [pendingArc, setPendingArc] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
   const [tab, setTab] = useState<'properties' | 'features'>('properties');
   const [menu, setMenu] = useState(false);
   const [historyVersion, setHistoryVersion] = useState(0);
@@ -243,12 +262,26 @@ export function Workspace({
     setSelectedId(null);
     setHistoryVersion((value) => value + 1);
   }, [project.id]);
+  useEffect(() => setEditError(null), [selectedId, project.id]);
   const commit = (entities: DrawingEntity[]) => {
+    let next: Project;
+    try {
+      next = validateProject({
+        ...project,
+        schemaVersion: project.schemaVersion === 2 || entities.some(hasCurves) ? 2 : 1,
+        entities,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : 'This geometry could not be saved.');
+      return;
+    }
     history.current.past.push(cloneEntities(project.entities));
     if (history.current.past.length > 100) history.current.past.shift();
     history.current.future = [];
     setHistoryVersion((value) => value + 1);
-    onChange({ ...project, entities, updatedAt: new Date().toISOString() });
+    setEditError(null);
+    onChange(next);
   };
   const updateSelected = (changes: Partial<DrawingEntity>) => {
     if (selected)
@@ -257,6 +290,12 @@ export function Workspace({
           entity.id === selected.id ? { ...entity, ...changes } : entity,
         ),
       );
+  };
+  const updateBulge = (index: number, value: number) => {
+    if (!selected) return;
+    const bulges = selected.bulges ? [...selected.bulges] : selected.points.map(() => 0);
+    bulges[index] = value;
+    updateSelected({ bulges });
   };
   const deleteSelected = () => {
     if (selected) {
@@ -321,6 +360,16 @@ export function Workspace({
         return;
       }
       if (input) return;
+      if (['polyline', 'contour', 'boundary'].includes(tool)) {
+        if (event.key.toLowerCase() === 'a') {
+          event.preventDefault();
+          setSegmentMode('arc');
+        }
+        if (event.key.toLowerCase() === 's') {
+          event.preventDefault();
+          setSegmentMode('line');
+        }
+      }
       const shortcuts: Record<string, DrawingTool> = {
         v: 'select',
         h: 'pan',
@@ -361,32 +410,8 @@ export function Workspace({
     setSelectedId(id);
     if (id) setTab('properties');
   };
-  const length =
-    selected?.points.reduce((sum, point, i, points) => {
-      if (i === 0) return sum;
-      return sum + Math.hypot(point.x - points[i - 1].x, point.y - points[i - 1].y);
-    }, 0) ?? 0;
-  const perimeter =
-    selected?.closed && selected.points.length
-      ? length +
-        Math.hypot(
-          selected.points.at(-1)!.x - selected.points[0].x,
-          selected.points.at(-1)!.y - selected.points[0].y,
-        )
-      : length;
-  const area = selected?.closed
-    ? Math.abs(
-        selected.points.reduce((sum, point, i, points) => {
-          const next = points[(i + 1) % points.length];
-          const origin = points[0];
-          return (
-            sum +
-            (point.x - origin.x) * (next.y - origin.y) -
-            (next.x - origin.x) * (point.y - origin.y)
-          );
-        }, 0) / 2,
-      )
-    : 0;
+  const perimeter = selected ? entityLength(selected) : 0;
+  const area = selected?.closed ? Math.abs(entitySignedArea(selected)) : 0;
   void historyVersion;
 
   return (
@@ -565,6 +590,7 @@ export function Workspace({
             ref={canvas}
             project={project}
             tool={tool}
+            segmentMode={segmentMode}
             elevation={elevation}
             selectedId={selectedId}
             onSelect={selectFeature}
@@ -583,17 +609,21 @@ export function Workspace({
             }
             onViewChange={(view) => onChange({ ...project, view })}
             onCursorChange={setCursor}
-            onDraftChange={setDraftCount}
+            onDraftChange={(count, pending = false) => {
+              setDraftCount(count);
+              setPendingArc(pending);
+            }}
           />
           {draftCount > 0 && (
             <div className="draft-actions">
               <span>
                 {draftCount} {draftCount === 1 ? 'point' : 'points'} placed
+                {pendingArc && ' · choose arc end'}
               </span>
               {['polyline', 'contour', 'boundary'].includes(tool) && (
                 <button
                   onClick={() => canvas.current?.finish()}
-                  disabled={draftCount < (tool === 'boundary' ? 3 : 2)}
+                  disabled={pendingArc || draftCount < (tool === 'boundary' ? 3 : 2)}
                 >
                   <Check size={14} />
                   Finish{tool === 'boundary' ? ' boundary' : ' line'}
@@ -710,6 +740,11 @@ export function Workspace({
                     value={selected.name}
                     onCommit={(name) => updateSelected({ name })}
                   />
+                  {editError && (
+                    <p className="curve-edit-error" role="alert">
+                      {editError}
+                    </p>
+                  )}
                   <NumericField
                     label={
                       selected.points.every((p) => p.z === selected.points[0].z)
@@ -717,6 +752,9 @@ export function Workspace({
                         : 'Set all elevations'
                     }
                     value={selected.points[0].z}
+                    commitUnchanged={selected.points.some(
+                      (point) => point.z !== selected.points[0].z,
+                    )}
                     suffix={unit}
                     onCommit={(z) =>
                       updateSelected({ points: selected.points.map((point) => ({ ...point, z })) })
@@ -775,7 +813,9 @@ export function Workspace({
                                 onCommit={(value) =>
                                   updateSelected({
                                     points: selected.points.map((p, i) =>
-                                      (selected.kind === 'contour' && axis === 'z') || i === index
+                                      ((selected.kind === 'contour' || hasCurves(selected)) &&
+                                        axis === 'z') ||
+                                      i === index
                                         ? { ...p, [axis]: value }
                                         : p,
                                     ),
@@ -788,6 +828,99 @@ export function Workspace({
                       ))}
                     </div>
                   </details>
+                  {['polyline', 'contour', 'boundary'].includes(selected.kind) && (
+                    <details className="vertex-details curve-segments">
+                      <summary>
+                        Segments and curves
+                        <ChevronDown size={13} />
+                      </summary>
+                      <div>
+                        <p className="curve-note">
+                          Circular arcs use one elevation. Editing a curved path's vertex Z moves
+                          the whole path. Straight paths can keep different elevations.
+                        </p>
+                        {selected.points
+                          .slice(0, selected.closed ? undefined : -1)
+                          .map((start, index) => {
+                            const end = selected.points[(index + 1) % selected.points.length];
+                            const bulge = selected.bulges?.[index] ?? 0;
+                            const arc = arcFromBulge(start, end, bulge);
+                            const chord = Math.hypot(end.x - start.x, end.y - start.y);
+                            const planar = selected.points.every((point) => point.z === start.z);
+                            return (
+                              <div className="curve-segment" key={`${selected.id}-${index}`}>
+                                <label className="curve-select">
+                                  <span>
+                                    Segment {index + 1}: vertex {index + 1} →{' '}
+                                    {((index + 1) % selected.points.length) + 1}
+                                  </span>
+                                  <select
+                                    aria-label={`Segment ${index + 1} type`}
+                                    value={bulge ? 'arc' : 'line'}
+                                    onChange={(event) =>
+                                      updateBulge(
+                                        index,
+                                        event.target.value === 'arc' ? Math.tan(Math.PI / 8) : 0,
+                                      )
+                                    }
+                                  >
+                                    <option value="line">Straight</option>
+                                    <option value="arc" disabled={!planar || chord < 1e-9}>
+                                      Arc
+                                    </option>
+                                  </select>
+                                </label>
+                                {!planar && (
+                                  <p className="curve-note">
+                                    Set all elevations to one Z to enable an arc.
+                                  </p>
+                                )}
+                                {arc && (
+                                  <>
+                                    <NumericField
+                                      label={`Radius · segment ${index + 1}`}
+                                      value={arc.radius}
+                                      suffix={unit}
+                                      min={chord / 2}
+                                      onCommit={(radius) => {
+                                        const minorSweep =
+                                          2 * Math.asin(Math.min(1, chord / (2 * radius)));
+                                        const sweep =
+                                          Math.abs(bulge) > 1
+                                            ? 2 * Math.PI - minorSweep
+                                            : minorSweep;
+                                        updateBulge(index, Math.sign(bulge) * Math.tan(sweep / 4));
+                                      }}
+                                    />
+                                    <label className="curve-select">
+                                      <span>Direction</span>
+                                      <select
+                                        aria-label={`Direction · segment ${index + 1}`}
+                                        value={bulge > 0 ? 'ccw' : 'cw'}
+                                        onChange={(event) =>
+                                          updateBulge(
+                                            index,
+                                            Math.abs(bulge) *
+                                              (event.target.value === 'ccw' ? 1 : -1),
+                                          )
+                                        }
+                                      >
+                                        <option value="ccw">Counterclockwise</option>
+                                        <option value="cw">Clockwise</option>
+                                      </select>
+                                    </label>
+                                    <p className="curve-note">
+                                      Sweep {precision((Math.abs(arc.sweep) * 180) / Math.PI)}° ·
+                                      radius must be at least {precision(chord / 2)} {unit}.
+                                    </p>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </details>
+                  )}
                   <div className="inspector-object-actions">
                     <button onClick={duplicateSelected}>
                       <Copy size={14} />
@@ -819,6 +952,40 @@ export function Workspace({
                         onCommit={setElevation}
                         testId="drawing-elevation"
                       />
+                      {['polyline', 'contour', 'boundary'].includes(tool) && (
+                        <div
+                          className="shape-mode segment-mode"
+                          role="group"
+                          aria-label="Segment type"
+                        >
+                          <span>Segment type</span>
+                          <div>
+                            <button
+                              className={segmentMode === 'line' ? 'active' : ''}
+                              aria-pressed={segmentMode === 'line'}
+                              data-testid="segment-line"
+                              title="Straight segments (S)"
+                              onClick={() => setSegmentMode('line')}
+                            >
+                              Line
+                            </button>
+                            <button
+                              className={segmentMode === 'arc' ? 'active' : ''}
+                              aria-pressed={segmentMode === 'arc'}
+                              data-testid="segment-arc"
+                              title="Circular arcs through three points (A)"
+                              onClick={() => setSegmentMode('arc')}
+                            >
+                              Arc (3 points)
+                            </button>
+                          </div>
+                          <p className="curve-note">
+                            {segmentMode === 'arc'
+                              ? 'Click start, a point on the curve, then end. Continue with another through point and end, or switch to Line.'
+                              : 'Click each endpoint. Switch to Arc to add a circular segment to the same path.'}
+                          </p>
+                        </div>
+                      )}
                       {(tool === 'boundary' || tool === 'boundary-rect') && (
                         <div className="shape-mode">
                           <span>Boundary shape</span>

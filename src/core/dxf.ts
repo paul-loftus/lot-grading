@@ -1,4 +1,5 @@
 import type { DrawingEntity, Point, Project } from './types';
+import { entityBounds, hasCurves, validateEntityCurves } from './geometry';
 
 /**
  * Frozen public interchange contract: ASCII DXF R2013 (AC1027), world coordinates,
@@ -6,7 +7,7 @@ import type { DrawingEntity, Point, Project } from './types';
  * The independent ezdxf gate reads the actual output of this writer on both OSes.
  */
 export const DXF_VERSION = 'AC1027';
-export const DXF_CONTRACT_VERSION = 1;
+export const DXF_CONTRACT_VERSION = 2;
 
 type Pair = readonly [number, string | number];
 type Write = (...pairs: Pair[]) => void;
@@ -75,6 +76,7 @@ function validateEntity(entity: DrawingEntity): void {
   if (entity.kind === 'contour' && entity.points.some((point) => point.z !== entity.points[0].z)) {
     throw new Error('A contour must have one constant elevation. Its vertices were not flattened.');
   }
+  validateEntityCurves(entity);
 }
 
 interface EntityWriter {
@@ -95,7 +97,11 @@ function writePolyline(entity: DrawingEntity, writer: EntityWriter): void {
       [70, entity.closed ? 1 : 0],
       [38, entity.points[0].z],
     );
-    for (const point of entity.points) write([10, point.x], [20, point.y]);
+    for (const [index, point] of entity.points.entries()) {
+      write([10, point.x], [20, point.y]);
+      const bulge = entity.bulges?.[index] ?? 0;
+      if (bulge !== 0) write([42, bulge]);
+    }
     write([210, 0], [220, 0], [230, 1]);
     identity(entity.id);
     return;
@@ -155,13 +161,15 @@ const serializers = {
 
 /** Export all supported objects from one project revision. Invalid input throws. */
 export function exportDxf(project: Project): string {
-  if (!project || project.schemaVersion !== 1 || !Array.isArray(project.entities))
+  if (!project || ![1, 2].includes(project.schemaVersion) || !Array.isArray(project.entities))
     throw new Error('A supported project is required for DXF export.');
   if (!Object.hasOwn(unitCodes, project.units))
     throw new Error('Select valid project units before exporting.');
   const ids = new Set<string>();
   for (const entity of project.entities) {
     validateEntity(entity);
+    if (project.schemaVersion === 1 && hasCurves(entity))
+      throw new Error('Curved geometry requires project schema version 2 before export.');
     if (ids.has(entity.id)) throw new Error(`Duplicate drawing identifier: ${entity.id}`);
     ids.add(entity.id);
   }
@@ -192,7 +200,14 @@ export function exportDxf(project: Project): string {
     return entityHandle;
   };
   const identity = (id: string) => write([1001, 'LOTGRADE'], [1000, ascii(id)]);
-  const allPoints = project.entities.flatMap((entity) => entity.points);
+  const allPoints = project.entities.flatMap((entity) => {
+    if (!hasCurves(entity)) return entity.points;
+    const bounds = entityBounds(entity);
+    return [
+      { x: bounds.minX, y: bounds.minY, z: bounds.minZ },
+      { x: bounds.maxX, y: bounds.maxY, z: bounds.maxZ },
+    ];
+  });
   const minimum: Point = { x: 0, y: 0, z: 0 };
   const maximum: Point = { x: 0, y: 0, z: 0 };
   if (allPoints.length) {

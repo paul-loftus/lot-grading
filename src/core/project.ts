@@ -1,4 +1,5 @@
 import { LAYERS, type DrawingEntity, type Project, type Units } from './types';
+import { hasCurves, validateEntityCurves } from './geometry';
 
 export const MAX_PROJECT_BYTES = 20 * 1024 * 1024;
 const kinds = new Set(['polyline', 'contour', 'boundary', 'building', 'point']);
@@ -20,8 +21,8 @@ function fail(message: string): never {
 /** One validation boundary shared by disk, browser storage, and the renderer. */
 export function validateProject(value: unknown): Project {
   if (!isRecord(value)) fail('The project must be an object.');
-  if (value.schemaVersion !== 1)
-    fail('Unsupported project version. This version of LotGrade opens schema version 1.');
+  if (value.schemaVersion !== 1 && value.schemaVersion !== 2)
+    fail('Unsupported project version. This version of LotGrade opens schema versions 1 and 2.');
   if (!id(value.id)) fail('The project ID is invalid.');
   if (!text(value.name, 120) || !value.name.trim())
     fail('Give the project a name (up to 120 characters).');
@@ -79,6 +80,11 @@ export function validateProject(value: unknown): Project {
       )
     )
       fail('Every vertex on a contour must have the same elevation.');
+    validateEntityCurves(entity as unknown as DrawingEntity);
+    if (value.schemaVersion === 1 && hasCurves(entity as unknown as DrawingEntity))
+      fail(
+        'Curved geometry requires project schema version 2 so older applications cannot silently flatten it.',
+      );
   }
   if (
     !isRecord(value.view) ||

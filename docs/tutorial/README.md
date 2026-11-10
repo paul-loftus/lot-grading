@@ -1,10 +1,12 @@
-# LotGrade tutorial · Rev 0
+# LotGrade drawing tutorial
 
 [Main README](../../README.md) · [Example files](../../examples/README.md) · [Civil 3D export guide](../CIVIL3D.md)
 
-This guide walks through drawing a small residential lot, assigning elevations, making lines meet, approximating curves, and saving/exporting your work. Allow about 20–30 minutes for the first pass.
+This guide walks through drawing a small residential lot, assigning elevations, making lines meet, drawing true circular arcs, and saving/exporting your work. Allow about 20–30 minutes for the first pass.
 
-Rev 0 supports manually drawn, elevated linework. True arcs and splines, automatic endpoint snapping/joining, slope calculations, and automatic grading are not available yet. The steps below use the tools that work now. All sample coordinates are illustrative.
+The current application supports manually drawn, elevated linework and circular arcs. Arbitrary splines, automatic smoothing, endpoint snapping/joining, slope calculations, and automatic grading are not available yet. All sample coordinates are illustrative.
+
+This guide includes the curve update after the original `rev-0` snapshot. If your app does not show **Segment type**, rebuild and launch the current source with `npm start`; the original Rev 0 bundles do not contain these controls.
 
 ## Contents
 
@@ -16,7 +18,7 @@ Rev 0 supports manually drawn, elevated linework. True arcs and splines, automat
 - [6. Place spot elevations](#6-place-spot-elevations)
 - [7. Draw lines and make connections](#7-draw-lines-and-make-connections)
 - [8. Draw contours](#8-draw-contours)
-- [9. Approximate a curve](#9-approximate-a-curve)
+- [9. Draw and edit circular curves](#9-draw-and-edit-circular-curves)
 - [10. Edit and organize features](#10-edit-and-organize-features)
 - [11. Save, reopen, and export](#11-save-reopen-and-export)
 - [Keyboard reference](#keyboard-reference)
@@ -94,6 +96,8 @@ Click **Fit drawing**. You should see a closed 90-by-125-foot lot, with a perime
 
 For an irregular lot, choose **Boundary → Polygon**, click at least three corners, then press **Enter**, click **Finish boundary**, or click near the first point to close it. You do not need to repeat the first vertex. Boundary points must enclose an area; a row of points on one straight line will not finish as a boundary.
 
+Polygon boundaries also offer **Line / Arc (3 points)** under **Segment type**. See [the curve walkthrough](#9-draw-and-edit-circular-curves) for a curved edge or curved closure. Rectangle creation keeps straight sides.
+
 ## 5. Add a building
 
 1. Choose **Building** (`R`).
@@ -125,11 +129,11 @@ Each click with **Spot** creates a separate feature. Its plan label displays its
 ### Make a straight line or a continuous path
 
 1. Choose **Polyline** (`L`).
-2. Set **Drawing elevation** and press **Enter**.
+2. Set **Segment type** to **Line**, set **Drawing elevation**, and press **Enter**.
 3. Click a start point and an end point for one straight segment. Click more points to add connected segments within the same feature.
 4. Press **Enter** or click **Finish line**. Double-click can also finish a line.
 
-A polyline needs at least two distinct points. Finishing leaves the tool active so you can start another line. Switching tools or pressing **Esc** discards the unfinished draft; finish it first if you want to keep it.
+A polyline needs at least two distinct endpoint vertices. Finishing leaves the tool active so you can start another line. Switching drawing tools or pressing **Esc** discards the unfinished draft; finish it first if you want to keep it. Changing only **Segment type** between Line and Arc keeps completed draft segments.
 
 ### Practice: connect the street to the threshold
 
@@ -141,7 +145,7 @@ Draw a **Polyline** with three approximate points and finish it. Select the resu
 | 2      | 44.5 |  20 | 101.5 |
 | 3      | 44.5 |  39 | 103.5 |
 
-Its first and last vertices now exactly match the two spot elevations. This line has changing elevations; use **Polyline** for that purpose. A **Contour** keeps every vertex at the same Z.
+Its first and last vertices now exactly match the two spot elevations. This line has changing elevations; use a straight-segment **Polyline** for that purpose. A **Contour**, or any feature containing an arc, keeps every vertex at the same Z.
 
 ### Make two separate lines meet exactly
 
@@ -157,7 +161,7 @@ The features remain separate objects. Moving or changing one does not update the
 ## 8. Draw contours
 
 1. Choose **Contour** (`C`).
-2. Set **Drawing elevation** to `101` and press **Enter**.
+2. Choose **Line** under **Segment type**, set **Drawing elevation** to `101`, and press **Enter**.
 3. Click several points across the lot to trace a contour, then press **Enter** or click **Finish line**.
 4. With no feature selected, use the `+ 1 ft` button in the right panel to set the next drawing elevation to `102`.
 5. Draw and finish another contour.
@@ -168,44 +172,65 @@ To revise an existing contour, select it and change **Elevation**. All its verti
 
 Contours and polylines finish as open objects. Boundaries and building outlines are closed automatically. Rev 0 has no close/open toggle for a finished feature.
 
-## 9. Approximate a curve
+## 9. Draw and edit circular curves
 
-Rev 0 has no true arc, radius, spline, or smoothing command. You can approximate a curved path with a polyline made of short straight segments:
+### Draw a three-point arc
 
-1. Choose **Polyline** (`L`), or **Contour** (`C`) for a constant-elevation contour.
-2. Set **Drawing elevation** and press **Enter**.
-3. Click successive points along the shape, using closer spacing where it bends more sharply.
-4. Finish the line.
-5. Select it and adjust its vertices numerically if needed.
+1. Choose **Polyline** (`L`) or **Contour** (`C`). Polygon **Boundary** supports the same segment controls.
+2. In the right panel, choose **Arc (3 points)** under **Segment type**.
+3. Set **Drawing elevation** to `102` and press **Enter**.
+4. Click the arc's **start**, a **point on the curve**, and its **endpoint**, in that order. The preview shows the curve before the last click.
+5. Press **Enter** or click **Finish line** to keep the feature.
 
-For practice, draw a five-point polyline, rename it `Curved path practice`, and set these values:
+For a practice semicircle, use these plan positions:
 
-| Vertex |   X |   Y |   Z |
-| ------ | --: | --: | --: |
-| 1      |  10 |  60 | 102 |
-| 2      |  20 |  64 | 102 |
-| 3      |  30 |  70 | 102 |
-| 4      |  38 |  79 | 102 |
-| 5      |  44 |  90 | 102 |
+| Pick |   X |   Y | Meaning                                 |
+| ---- | --: | --: | --------------------------------------- |
+| 1    |  10 |  60 | Start of the arc                        |
+| 2    |  30 |  80 | A point on the arc, above the endpoints |
+| 3    |  50 |  60 | End of the arc                          |
 
-This produces a path that bends gradually through several segments. Its DXF export preserves those straight segments; it does not become a true curve. If grid snap makes placement too coarse, reduce **Grid spacing** or turn **Grid snap OFF**. Finished features do not currently have an add/remove-vertex command, so redraw a path if it needs a different number of vertices.
+The second pick is on the curve; it is not the circle center. The saved arc has two endpoint vertices. Its through-point is used to determine the circular shape rather than becoming a third endpoint.
+
+To make the result exact after approximate mouse placement, select the finished feature, rename it `Arc practice`, and set **Vertex coordinates** to `(10, 60, 102)` and `(50, 60, 102)`. Expand **Segments and curves**, set segment 1's **Radius** to `20`, and choose **Clockwise**. The arc should bow upward/northward between the endpoints, with a plan length of approximately `62.83 ft`.
+
+### Mix straight segments and arcs
+
+While a path is still being drawn, switch **Segment type** to **Line** and click the next endpoint to append a straight segment. Switch back to **Arc (3 points)** to append another curve: its start is the existing endpoint, so click only a point on the new curve and its endpoint.
+
+Changing segment mode keeps the completed draft. If you have chosen a through-point but not its endpoint, switching mode discards that pending through-point. Finish is unavailable while an arc still needs its endpoint. Complete it, or switch back to Line to discard the incomplete bend before finishing. Pressing Esc cancels the whole unfinished feature.
+
+For a polygon boundary, Enter finishes the boundary with a straight closing edge. To make the closing edge curved, choose Arc, pick its through-point, and click the boundary's first point as the arc endpoint.
+
+The joins share endpoint positions. Tangency is not automatically constrained, so two arcs or a line and an arc can meet at an angle.
+
+### Edit a finished curve
+
+Select the feature and expand **Segments and curves**. Each segment offers a **Straight / Arc** type control. Arc segments also expose **Radius** and **Direction** (**Counterclockwise / Clockwise**).
+
+Converting a straight segment to Arc starts with a 90-degree circular bend. Change Radius to reshape it, or Direction to reverse the bend. A circular arc's radius cannot be smaller than half the distance between its endpoints. Radius edits preserve whether an existing arc takes the minor or major route around its circle. Choose Straight to remove that segment's curvature explicitly.
+
+Curved features use one elevation throughout, so editing any vertex Z moves all their vertex elevations together. Arc conversion is unavailable on a varying-elevation path; assign a common elevation first if a planar curve is intended. Keep a sloping driveway edge as a varying-Z straight polyline when its individual elevations matter.
+
+These are true circular arcs in the drawing and DXF, not many short line approximations. Arbitrary splines and automatic smoothing are not included. Existing/Test 2 contours are not automatically reshaped. If you need a different number of endpoint vertices, redraw the path; add/remove-vertex commands are not yet available.
 
 ## 10. Edit and organize features
 
 Select an object on the canvas with **Select** (`V`), or choose it from **Features**. The properties panel provides:
 
-| Control                                | Use                                                                       |
-| -------------------------------------- | ------------------------------------------------------------------------- |
-| **Feature name**                       | Give the object a descriptive name; press Enter to apply                  |
-| **Elevation** / **Set all elevations** | Assign one Z to every vertex; this flattens a varying-elevation line      |
-| **DXF layer**                          | Choose its export layer, such as `FG-DRIVEWAY`; press Enter to apply      |
-| **Vertex coordinates**                 | Edit an individual X, Y, or Z; contour Z edits apply to the whole contour |
-| **Duplicate**                          | Make a separate, slightly offset copy with the same elevations            |
-| **Delete**                             | Remove the selected feature                                               |
+| Control                                | Use                                                                        |
+| -------------------------------------- | -------------------------------------------------------------------------- |
+| **Feature name**                       | Give the object a descriptive name; press Enter to apply                   |
+| **Elevation** / **Set all elevations** | Assign one Z to every vertex; this flattens a varying-elevation line       |
+| **DXF layer**                          | Choose its export layer, such as `FG-DRIVEWAY`; press Enter to apply       |
+| **Vertex coordinates**                 | Edit X/Y, or Z; contour and curved-path Z edits apply to the whole feature |
+| **Segments and curves**                | Convert Straight/Arc segments; edit a planar arc's radius and direction    |
+| **Duplicate**                          | Make a separate, slightly offset copy with the same elevations             |
+| **Delete**                             | Remove the selected feature                                                |
 
 To move an entire feature, drag it with **Select**. This changes X/Y while preserving Z. Grid snap applies to the move offset. To move only one vertex, use **Vertex coordinates**; the small selected-vertex markers are not draggable handles.
 
-**Length**, **Perimeter**, and **Area** report plan measurements based on X/Y. Length is not the three-dimensional distance along a sloping line.
+**Length**, **Perimeter**, and **Area** report plan measurements based on X/Y and include the actual circular segments. An arc is measured along its curve, not its endpoint chord. Length is not the three-dimensional distance along a sloping line. Fit drawing and project thumbnails also account for curves extending beyond their endpoint bounds.
 
 Use the toolbar's **Undo** and **Redo** buttons to reverse or restore feature edits. The drawing history holds up to 100 feature-edit steps and resets when you reopen a project. It does not undo view changes or drawing settings. While typing in an input field, undo applies to text editing instead.
 
@@ -225,6 +250,8 @@ To keep an editable file in a folder you choose:
 
 **Save project as…** writes a snapshot copy. Later edits continue saving to the local library; save another copy when you want to update your external file.
 
+Adding an arc upgrades the project file to schema 2, which stays in place even if you later straighten the arc. This application still opens older schema 1 projects. Original Rev 0 applications reject schema 2 rather than silently opening its curves as straight segments; use the current application when sharing a curved project.
+
 To reopen a library project, click **Projects** and select its card. To open an external `.lotgrade` file, choose **Open project file** on the dashboard, or **Open project file…** from the save-options menu. Opening a file imports a copy into the library. If its project ID is already present, LotGrade creates another entry rather than replacing the existing project.
 
 The browser preview (`npm run dev`) stores its projects separately from the desktop app and downloads saved copies/exports through the browser. Use `.lotgrade` files to move work between them or between computers.
@@ -237,7 +264,7 @@ The browser preview (`npm run dev`) stores its projects separately from the desk
 4. Use **Zoom Extents** to find the drawing.
 5. Check drawing units, layers, closed boundaries, and known coordinates/elevations before using the geometry elsewhere. The tutorial's `Front threshold` spot should be **X = 44.5, Y = 39, Z = 103.5** in international feet.
 
-DXF includes all committed features, including those outside the visible canvas. It preserves source coordinates and elevations. It contains elevated drawing entities, not a generated terrain surface or live grading model. Keep the `.lotgrade` file for continued editing in LotGrade; Rev 0 does not import DXF files.
+DXF includes all committed features, including those outside the visible canvas. It preserves source coordinates, elevations, and exact circular arcs. It contains elevated drawing entities, not a generated terrain surface or live grading model. Keep the `.lotgrade` file for continued editing in LotGrade; the application does not import DXF files.
 
 See the [Civil 3D receiving checklist](../CIVIL3D.md#receiving-checklist) for the full check. Actual receiving validation in Civil 3D 2025 remains pending; the automated DXF checks are separate evidence.
 
@@ -254,6 +281,8 @@ Tool shortcuts work when you are not typing in an input field. Use **Command** o
 | `B`                        | Polygon lot boundary; choose Rectangle in Properties for a rectangular boundary                |
 | `R`                        | Building rectangle                                                                             |
 | `P`                        | Spot elevation                                                                                 |
+| `A`                        | Switch the active Polyline, Contour, or polygon Boundary to Arc mode                           |
+| `S`                        | Switch the active path to Line mode                                                            |
 | Hold `Space` and drag      | Temporarily pan                                                                                |
 | `Enter`                    | Finish a polyline, contour, or polygon boundary; in a numeric field, commit that field instead |
 | `Esc`                      | Cancel an unfinished drawing and clear the selection                                           |
@@ -267,17 +296,22 @@ The desktop application's **File** menu also offers `Command/Ctrl + N` for a new
 
 ## Troubleshooting
 
-| What happened?                                             | What to try                                                                                                                          |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| A shortcut types into a box instead of switching tools     | Commit the field with Enter, then click the tool you want                                                                            |
-| I cannot find the drawing                                  | Click Fit drawing; pan/zoom changes the view without moving your geometry                                                            |
-| A number I typed did not apply                             | Press Enter or move focus out of the field; invalid values revert to the previous value                                              |
-| I can draw only on whole-foot positions                    | Reduce Grid spacing, turn Grid snap off, or edit exact vertex coordinates afterward                                                  |
-| Two lines look connected but have different heights        | Compare both endpoint Z values as well as X/Y in Vertex coordinates                                                                  |
-| Moving one connected-looking feature leaves a gap          | Shared coordinates are not a live connection; update the other feature's endpoint too                                                |
-| Changing Drawing elevation did not change an existing line | Select that feature and edit Elevation or its vertex Z values                                                                        |
-| A contour will not keep different endpoint elevations      | Use Polyline for changing elevations; a contour always has one Z                                                                     |
-| A draft disappeared after switching tools                  | Unfinished drafts are cancelled when switching; finish with Enter or the Finish button first                                         |
-| An overlapping feature is hard to select                   | Choose it by name in Features                                                                                                        |
-| I need a true curve, joined objects, or more vertices      | Use segmented linework or redraw with the needed points; those editing commands are not available in Rev 0                           |
-| Saving to the library failed                               | Use Save project as… to keep a portable copy and Export DXF to keep the current valid linework, then resolve the reported save error |
+| What happened?                                                          | What to try                                                                                                                          |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| A shortcut types into a box instead of switching tools                  | Commit the field with Enter, then click the tool you want                                                                            |
+| I cannot find the drawing                                               | Click Fit drawing; pan/zoom changes the view without moving your geometry                                                            |
+| A number I typed did not apply                                          | Press Enter or move focus out of the field; invalid values revert to the previous value                                              |
+| I can draw only on whole-foot positions                                 | Reduce Grid spacing, turn Grid snap off, or edit exact vertex coordinates afterward                                                  |
+| Two lines look connected but have different heights                     | Compare both endpoint Z values as well as X/Y in Vertex coordinates                                                                  |
+| Moving one connected-looking feature leaves a gap                       | Shared coordinates are not a live connection; update the other feature's endpoint too                                                |
+| Changing Drawing elevation did not change an existing line              | Select that feature and edit Elevation or its vertex Z values                                                                        |
+| A contour or curved feature will not keep different endpoint elevations | Use a straight-segment Polyline for changing elevations; contours and curved features keep one Z                                     |
+| A draft disappeared after switching tools                               | Unfinished drafts are cancelled when switching; finish with Enter or the Finish button first                                         |
+| An overlapping feature is hard to select                                | Choose it by name in Features                                                                                                        |
+| Arc conversion is disabled on a selected line                           | Its vertices have different elevations; use Set all elevations to assign one common Z if a planar curve is intended                  |
+| Three arc picks will not produce a curve                                | Choose distinct start/through/end points that are not all on a straight line; follow the displayed correction message                |
+| Finish is unavailable after choosing a point on the arc                 | Choose the arc endpoint, or switch to Line to discard that pending through-point before finishing                                    |
+| A curve bends the wrong way                                             | Select it, open Segments and curves, and change Direction                                                                            |
+| The radius I entered is too small                                       | Use at least half the endpoint-to-endpoint distance, or move the endpoints closer together                                           |
+| I need a spline, joined objects, or more vertices                       | Splines and joins are not included; use circular arcs or redraw with the needed endpoint vertices                                    |
+| Saving to the library failed                                            | Use Save project as… to keep a portable copy and Export DXF to keep the current valid linework, then resolve the reported save error |

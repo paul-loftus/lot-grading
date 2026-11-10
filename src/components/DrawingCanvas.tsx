@@ -2,9 +2,17 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from 'react';
 import type { DrawingEntity, Point, Project } from '../core/types';
 import { LAYERS } from '../core/types';
+import {
+  bulgeThroughPoint,
+  entityBounds,
+  entitySignedArea,
+  entitySvgPath,
+  validateEntityCurves,
+} from '../core/geometry';
 
 export type DrawingTool =
   'select' | 'pan' | 'polyline' | 'contour' | 'boundary' | 'boundary-rect' | 'building' | 'point';
+export type SegmentMode = 'line' | 'arc';
 export interface CanvasHandle {
   finish: () => void;
   cancel: () => void;
@@ -13,6 +21,7 @@ export interface CanvasHandle {
 interface DrawingCanvasProps {
   project: Project;
   tool: DrawingTool;
+  segmentMode: SegmentMode;
   elevation: number;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
@@ -20,7 +29,7 @@ interface DrawingCanvasProps {
   onMove: (id: string, dx: number, dy: number) => void;
   onViewChange: (view: Project['view']) => void;
   onCursorChange: (point: Point | null) => void;
-  onDraftChange: (count: number) => void;
+  onDraftChange: (count: number, pendingArc?: boolean) => void;
 }
 
 const COLORS: Record<DrawingEntity['kind'], string> = {
@@ -31,17 +40,11 @@ const COLORS: Record<DrawingEntity['kind'], string> = {
   point: '#a16549',
 };
 const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
-const signedArea = (points: Point[]) =>
-  points.reduce((sum, p, i) => {
-    const next = points[(i + 1) % points.length];
-    const origin = points[0];
-    return sum + (p.x - origin.x) * (next.y - origin.y) - (next.x - origin.x) * (p.y - origin.y);
-  }, 0) / 2;
-
 export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(function DrawingCanvas(
   {
     project,
     tool,
+    segmentMode,
     elevation,
     selectedId,
     onSelect,
@@ -56,6 +59,9 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   const host = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 1000, height: 700 });
   const [draft, setDraft] = useState<Point[]>([]);
+  const [draftBulges, setDraftBulges] = useState<number[]>([]);
+  const [arcThrough, setArcThrough] = useState<Point | null>(null);
+  const [drawingError, setDrawingError] = useState<string | null>(null);
   const [hover, setHover] = useState<Point | null>(null);
   const [spaceDown, setSpaceDown] = useState(false);
   const [drag, setDrag] = useState<{
@@ -90,12 +96,19 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   };
   const clearDraft = () => {
     setDraft([]);
+    setDraftBulges([]);
+    setArcThrough(null);
+    setDrawingError(null);
     setHover(null);
     onDraftChange(0);
   };
-  const create = (points: Point[], kind: DrawingEntity['kind'], closed: boolean) => {
+  const create = (
+    points: Point[],
+    kind: DrawingEntity['kind'],
+    closed: boolean,
+    bulges: number[] = [],
+  ) => {
     if (kind === 'contour') points = points.map((point) => ({ ...point, z: elevation }));
-    if (closed && Math.abs(signedArea(points)) < 1e-9) return;
     const labels = {
       polyline: 'Line',
       contour: 'Contour',
@@ -111,20 +124,36 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
       points,
       closed,
       layer: LAYERS[kind],
+      ...(bulges.some(Boolean) ? { bulges } : {}),
     };
+    try {
+      validateEntityCurves(entity);
+      if (closed && Math.abs(entitySignedArea(entity)) < 1e-9) {
+        setDrawingError('The boundary must enclose an area. Add another corner or curve.');
+        return;
+      }
+    } catch (error) {
+      setDrawingError(error instanceof Error ? error.message : 'This curve could not be created.');
+      return;
+    }
     onCreate(entity);
     onSelect(null);
     clearDraft();
   };
   const finish = () => {
+    if (arcThrough) {
+      setDrawingError(
+        'Choose the arc endpoint before finishing, or switch to Line to discard the pending through point.',
+      );
+      return;
+    }
     const closed = tool === 'boundary';
     if (draft.length >= (closed ? 3 : 2) && ['polyline', 'contour', 'boundary'].includes(tool)) {
-      create(draft, tool as 'polyline' | 'contour' | 'boundary', closed);
+      create(draft, tool as 'polyline' | 'contour' | 'boundary', closed, draftBulges);
     }
   };
   const fit = () => {
-    const points = project.entities.flatMap((entity) => entity.points);
-    if (!points.length) {
+    if (!project.entities.length) {
       setTransientView(null);
       onViewChange({ centerX: 0, centerY: 0, scale: 8 });
       return;
@@ -133,11 +162,12 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
       maxX = -Infinity,
       minY = Infinity,
       maxY = -Infinity;
-    for (const point of points) {
-      minX = Math.min(minX, point.x);
-      maxX = Math.max(maxX, point.x);
-      minY = Math.min(minY, point.y);
-      maxY = Math.max(maxY, point.y);
+    for (const entity of project.entities) {
+      const bounds = entityBounds(entity);
+      minX = Math.min(minX, bounds.minX);
+      maxX = Math.max(maxX, bounds.maxX);
+      minY = Math.min(minY, bounds.minY);
+      maxY = Math.max(maxY, bounds.maxY);
     }
     const scale = Math.min(
       (size.width - 160) / Math.max(maxX - minX, 10),
@@ -163,6 +193,12 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   useEffect(() => {
     clearDraft();
   }, [tool, project.id]);
+  useEffect(() => {
+    // Switching segment types preserves completed segments, not an unfinished bend.
+    setArcThrough(null);
+    setDrawingError(null);
+    onDraftChange(draft.length, false);
+  }, [segmentMode]);
   useEffect(
     () => () => {
       if (wheelTimer.current) clearTimeout(wheelTimer.current);
@@ -243,11 +279,56 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
       return;
     }
     if (draft.length && distance(draft[draft.length - 1], point) < 1e-9) return;
+    if (['polyline', 'contour', 'boundary'].includes(tool)) {
+      const hasArc = draftBulges.some(Boolean);
+      if (
+        tool !== 'contour' &&
+        (segmentMode === 'arc' || hasArc) &&
+        draft.some((vertex) => vertex.z !== point.z)
+      ) {
+        setDrawingError(
+          `Curved paths need one elevation. Set Drawing elevation to ${draft[0].z}, or finish this line before starting an arc.`,
+        );
+        return;
+      }
+      if (segmentMode === 'arc' && draft.length) {
+        if (!arcThrough) {
+          setArcThrough(point);
+          setDrawingError(null);
+          onDraftChange(draft.length, true);
+          return;
+        }
+        const closing =
+          tool === 'boundary' && draft.length >= 3 && distance(draft[0], point) * view.scale < 12;
+        const end = closing ? draft[0] : point;
+        const bulge = bulgeThroughPoint(draft.at(-1)!, arcThrough, end);
+        if (bulge === null || bulge === 0) {
+          setDrawingError(
+            'These points do not define a circular arc. Choose a distinct endpoint away from the straight line.',
+          );
+          return;
+        }
+        const bulges = [...draftBulges];
+        bulges[draft.length - 1] = bulge;
+        if (closing) {
+          create(draft, 'boundary', true, bulges);
+        } else {
+          setDraft([...draft, point]);
+          setDraftBulges([...bulges, 0]);
+          setArcThrough(null);
+          setDrawingError(null);
+          onDraftChange(draft.length + 1, false);
+        }
+        return;
+      }
+    }
     if (tool === 'boundary' && draft.length >= 3 && distance(draft[0], point) * view.scale < 12) {
       finish();
       return;
     }
     setDraft([...draft, point]);
+    setDraftBulges([...draftBulges, 0]);
+    setDrawingError(null);
     onDraftChange(draft.length + 1);
   };
   const pointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
@@ -320,27 +401,42 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   const origin = screen({ x: 0, y: 0 });
   const patternX = ((origin.x % gridPx) + gridPx) % gridPx;
   const patternY = ((origin.y % gridPx) + gridPx) % gridPx;
-  const draftPoints = (() => {
-    if (!draft.length) return [];
+  const draftPreview = (() => {
+    let points = draft;
+    let bulges = draftBulges;
     if ((tool === 'building' || tool === 'boundary-rect') && hover) {
+      if (!draft.length) return null;
       const first = draft[0];
-      return [
+      points = [
         first,
         { x: hover.x, y: first.y, z: elevation },
         hover,
         { x: first.x, y: hover.y, z: elevation },
         first,
       ];
+      bulges = [];
+    } else if (draft.length && hover) {
+      const bulge = arcThrough ? bulgeThroughPoint(draft.at(-1)!, arcThrough, hover) : null;
+      if (arcThrough && bulge !== null) {
+        bulges = [...draftBulges];
+        bulges[draft.length - 1] = bulge;
+        bulges.push(0);
+        points = [...draft, hover];
+      } else {
+        points = [...draft, ...(arcThrough ? [arcThrough] : []), hover];
+        bulges = [...draftBulges, ...(arcThrough ? [0] : []), 0];
+      }
     }
-    return hover ? [...draft, hover] : draft;
+    return {
+      id: 'draft',
+      name: 'Draft',
+      layer: '0',
+      kind: 'polyline' as const,
+      points,
+      bulges,
+      closed: false,
+    };
   })();
-  const pointString = (points: Point[]) =>
-    points
-      .map((p) => {
-        const s = screen(p);
-        return `${s.x},${s.y}`;
-      })
-      .join(' ');
   const scaleBarWorld =
     10 ** Math.floor(Math.log10(100 / view.scale)) *
     ([1, 2, 5, 10].find(
@@ -432,7 +528,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
               : entity.kind === 'point'
                 ? points[0].z.toFixed(2)
                 : entity.name;
-          const geometry = entity.closed ? [...points, points[0]] : points;
+          const path = entitySvgPath({ ...entity, points }, screen, view.scale);
           return (
             <g
               key={entity.id}
@@ -454,15 +550,16 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
               ) : (
                 <>
                   {entity.closed && (
-                    <polygon
-                      points={pointString(points)}
+                    <path
+                      d={path}
                       fill={entity.kind === 'building' ? '#53777b15' : '#305b4b07'}
                       stroke="none"
                       onPointerDown={(event) => selectEntity(event, entity)}
                     />
                   )}
-                  <polyline
-                    points={pointString(geometry)}
+                  <path
+                    data-testid="feature-path"
+                    d={path}
                     fill="none"
                     stroke={color}
                     strokeWidth={selected ? 2.4 : entity.kind === 'boundary' ? 1.9 : 1.5}
@@ -471,8 +568,8 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
                     strokeLinecap="round"
                     pointerEvents="none"
                   />
-                  <polyline
-                    points={pointString(geometry)}
+                  <path
+                    d={path}
                     fill="none"
                     stroke="transparent"
                     strokeWidth="14"
@@ -509,9 +606,10 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
             </g>
           );
         })}
-        {draftPoints.length > 1 && (
-          <polyline
-            points={pointString(draftPoints)}
+        {draftPreview && draftPreview.points.length > 1 && (
+          <path
+            data-testid="draft-path"
+            d={entitySvgPath(draftPreview, screen, view.scale)}
             fill={tool === 'building' || tool === 'boundary-rect' ? '#305b4b0a' : 'none'}
             stroke="#c47b3f"
             strokeWidth="1.6"
@@ -534,6 +632,18 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
             />
           );
         })}
+        {arcThrough && (
+          <g pointerEvents="none" data-testid="arc-through-point">
+            <circle cx={screen(arcThrough).x} cy={screen(arcThrough).y} r="5" fill="#c47b3f" />
+            <text
+              x={screen(arcThrough).x + 10}
+              y={screen(arcThrough).y - 10}
+              className="canvas-feature-label"
+            >
+              Through point
+            </text>
+          </g>
+        )}
         {hover && !['select', 'pan'].includes(tool) && !drag && (
           <g pointerEvents="none">
             <rect
@@ -575,6 +685,20 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
           <line y1="7" y2="28" stroke="#526a59" strokeWidth="1" />
         </g>
       </svg>
+      {(drawingError ||
+        (segmentMode === 'arc' && ['polyline', 'contour', 'boundary'].includes(tool))) && (
+        <div
+          className={`canvas-curve-hint ${drawingError ? 'has-error' : ''}`}
+          role={drawingError ? 'alert' : 'status'}
+        >
+          {drawingError ??
+            (!draft.length
+              ? 'Arc: choose the start point.'
+              : arcThrough
+                ? 'Choose the arc endpoint. The preview passes through the marked point.'
+                : 'Choose a point on the arc, then its endpoint.')}
+        </div>
+      )}
       {!project.entities.length && !draft.length && (
         <div className="canvas-empty-hint" aria-hidden="true">
           <span className="eyebrow">YOUR LOT STARTS HERE</span>
