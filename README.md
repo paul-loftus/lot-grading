@@ -78,6 +78,8 @@ The end-to-end suite exercises project management, every drawing tool, editing, 
 
 ## Scope and next steps
 
+The **[professional workflow roadmap](research/14-professional-feature-priorities/README.md)** ranks proposed next features, starting with precision snapping/input, real survey/reference import, clearer file handling/recovery, and slope tools. It is a planning backlog; the feature list above and the tutorial describe what currently works.
+
 V0 is the drawing and exchange foundation. Automated grading, terrain import/triangulation, drainage validation, earthwork volumes, and LandXML surface export require subsequent engineering work. The architecture keeps the model, project persistence, drawing workspace, and CAD exporter separate so those features can grow around the protected exchange contract.
 
 The original product and engineering research is preserved in the [research index](research/README.md), with a later [arcs and curves study](research/13-arcs-and-curves/README.md) documenting the tool and export decisions. Its earlier Windows-first stack recommendation is superseded for this implementation by the explicit macOS + Windows requirement and the Electron/React/TypeScript decision in [development notes](docs/DEVELOPMENT.md).

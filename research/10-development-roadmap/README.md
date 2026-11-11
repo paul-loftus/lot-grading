@@ -2,21 +2,27 @@
 
 [Research index](../../README.md) · [Architecture](../05-architecture-and-stack/README.md) · [Risk register](../11-risks-and-open-questions/README.md)
 
+## Current priorities · November 10, 2026
+
+The executable v0 and exact circular-arc tools now exist. The current feature ranking is in **[Professional workflow priorities](../14-professional-feature-priorities/README.md)**: precision drawing/snapping, real reference import, file handling/recovery, and slope tools come first, followed by editing/visibility, design controls, surfaces, and bounded grading assistance. That document includes the proposed first slice, dependencies, and completion examples. It is planning only; no proposed feature is implemented by this update.
+
+The staged plan and staffing estimates below preserve the original October 26 research assumptions. Use the linked current priorities for what to build next rather than treating this historical plan as the application's present status or a current solo-development estimate.
+
 ## Build in evidence-producing stages
 
 The next investment should establish that the surface is correct, the handoff works, and the focused workflow saves time. Build one complete slice before expanding the number of grading objects or housing types.
 
 The estimates below are planning ranges, not commitments. They assume roughly **two experienced software developers**, one capable of computational geometry, plus regular access to a practicing civil/site engineer and pilot designers. Some activities can overlap; elapsed total is not the sum of all rows. A solo developer should reduce initial scope and re-estimate after the first experiments.
 
-| Stage | Indicative effort / elapsed range | Concrete output | Exit criterion |
-| --- | --- | --- | --- |
-| 0. Discovery and input collection | 1–2 weeks | Task recordings, prepared files, required Civil 3D builds, platform decision | Agreement on one initial lot workflow and measurable baseline |
-| 1. Interchange proof | 1–2 weeks | Tiny analytic TIN, DXF contours, export manifest, receiving checklist | Actual Civil 3D imports preserve required coordinates/elevations/domain |
-| 2. Geometry foundation | 2–4 weeks | Headless mesh adapter, constraints, contours, analytic fixtures | Constraint/domain/degeneracy cases pass; library decision recorded |
-| 3. Detached-home vertical slice | 4–8 weeks | Project → EG/reference import → pad/yard/swale/tie-in → review → export | A pilot designer completes a realistic supported lot end to end |
-| 4. Reliability and pilot hardening | 4–8 weeks | Diagnostics, sections, recovery, numeric entry, packaging, regression corpus | Engineer-reviewed pilot tasks and measured speed/cleanup benefit |
-| 5. Housing/workflow expansion | Re-estimate after pilots | Townhouse interfaces, repeated templates, later multifamily controls | Each added workflow passes its own cases and handoff checks |
-| 6. Optional assistance/integration | Re-estimate per feature | Limited optimization or Civil 3D companion add-in | Demonstrated reduction in an observed bottleneck without hidden violations |
+| Stage                              | Indicative effort / elapsed range | Concrete output                                                              | Exit criterion                                                             |
+| ---------------------------------- | --------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 0. Discovery and input collection  | 1–2 weeks                         | Task recordings, prepared files, required Civil 3D builds, platform decision | Agreement on one initial lot workflow and measurable baseline              |
+| 1. Interchange proof               | 1–2 weeks                         | Tiny analytic TIN, DXF contours, export manifest, receiving checklist        | Actual Civil 3D imports preserve required coordinates/elevations/domain    |
+| 2. Geometry foundation             | 2–4 weeks                         | Headless mesh adapter, constraints, contours, analytic fixtures              | Constraint/domain/degeneracy cases pass; library decision recorded         |
+| 3. Detached-home vertical slice    | 4–8 weeks                         | Project → EG/reference import → pad/yard/swale/tie-in → review → export      | A pilot designer completes a realistic supported lot end to end            |
+| 4. Reliability and pilot hardening | 4–8 weeks                         | Diagnostics, sections, recovery, numeric entry, packaging, regression corpus | Engineer-reviewed pilot tasks and measured speed/cleanup benefit           |
+| 5. Housing/workflow expansion      | Re-estimate after pilots          | Townhouse interfaces, repeated templates, later multifamily controls         | Each added workflow passes its own cases and handoff checks                |
+| 6. Optional assistance/integration | Re-estimate per feature           | Limited optimization or Civil 3D companion add-in                            | Demonstrated reduction in an observed bottleneck without hidden violations |
 
 A reasonable initial planning envelope is **roughly 3–6 months to a restricted pilot** for the assumed team, with substantial uncertainty around difficult geometry and customer data. A production product with broad townhouse/multifamily support is a separate estimate. No fixed budget is defensible before stages 0–2.
 
@@ -68,16 +74,16 @@ Complete practicing-engineer reviews and real Civil 3D round trips. Publish the 
 
 ## Later features, ordered by demonstrated need
 
-| Feature | Add when |
-| --- | --- |
-| Office house/lot templates | Repeated controls demonstrably consume pilot time |
-| Townhouse/shared-lot workflows | Shared boundary ownership and row-level tests are established |
-| Multifamily workflows | Route, parking, entrance, and common-area requirements are specified and checked |
-| Civil 3D companion add-in | Input preparation/import styling is a measured bottleneck |
-| Constrained elevation assistance | Explicit operations are reliable and repetitive adjustment remains costly |
-| Direct DWG | Input friction justifies SDK cost and expanded validation |
-| Point-cloud/DEM ingestion | Customers supply those sources often enough to justify a source-quality workflow |
-| Hydraulic integration | Demand, models, validation data, and specialist expertise are available |
+| Feature                          | Add when                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| Office house/lot templates       | Repeated controls demonstrably consume pilot time                                |
+| Townhouse/shared-lot workflows   | Shared boundary ownership and row-level tests are established                    |
+| Multifamily workflows            | Route, parking, entrance, and common-area requirements are specified and checked |
+| Civil 3D companion add-in        | Input preparation/import styling is a measured bottleneck                        |
+| Constrained elevation assistance | Explicit operations are reliable and repetitive adjustment remains costly        |
+| Direct DWG                       | Input friction justifies SDK cost and expanded validation                        |
+| Point-cloud/DEM ingestion        | Customers supply those sources often enough to justify a source-quality workflow |
+| Hydraulic integration            | Demand, models, validation data, and specialist expertise are available          |
 
 ## Practical first two weeks
 
@@ -85,4 +91,4 @@ Week 1: define the pilot workflow and exact receiving environment; obtain repres
 
 Week 2: implement and test the minimal LandXML/DXF writer in Civil 3D; compare native/managed triangulation on a small shared corpus; record pass/fail evidence and architecture decisions. If Civil 3D access or source files are unavailable, finish the local experiments but do not mark the handoff milestone passed.
 
-This repository completes the research/documentation stage. The milestones above are recommended implementation work, not work already performed.
+This was the original research-stage roadmap. The application has since gained a working drafting/export foundation and circular arcs; the [application README](../../README.md) records implemented scope and the [professional priorities](../14-professional-feature-priorities/README.md) record proposed next work. Surface grading remains future development.
