@@ -16,6 +16,8 @@ For the curve implementation developed from `5c7a5d6`, local verification on **O
 
 Those are local macOS results. Updated Windows/Intel Mac CI evidence and the separate Civil 3D 2025 receiving test are still required before claiming those checks passed for curves.
 
+On **November 10, 2026**, the subsequent local precision-placement update passed **52 unit tests**, **14 browser/native workflows**, production build/typechecking, formatting, and all **7 independent DXF checks**. The added workflows exercise fractional coordinate placement with grid snap enabled, endpoint/midpoint/arc-center/intersection feedback, overlapping-target cycling, explicit source-Z acquisition, bearing/distance entry, exact small boundaries, and Alt/Option override while a settings control has focus. Source-elevation acquisition for a spot does not unexpectedly change the drawing elevation. Native tests use isolated temporary profiles. These results do not establish updated Windows receiving behavior or Civil 3D acceptance.
+
 ## Requirement checklist
 
 | Requirement               | Evidence to collect                                                                                                                       |

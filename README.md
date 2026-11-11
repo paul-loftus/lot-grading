@@ -25,6 +25,7 @@ For step-by-step drawing instructions, follow the **[LotGrade tutorial](docs/tut
 - Drawing tools: polylines, constant-elevation contours, polygon/rectangular lot boundaries, building rectangles, and spot elevations.
 - Curves: mix straight and exact three-point circular arc segments in polylines, contours, and polygon boundaries; edit segment radius/direction and retain true curves in DXF.
 - Editing: selection, moving features, numeric elevation/vertex editing, custom DXF layers, undo/redo, grid snapping, pan, zoom, and fit drawing.
+- Precision placement: endpoint/point/midpoint/arc-center/intersection snaps with visible targets, optional source-elevation acquisition, and exact coordinate or survey-bearing/distance entry during drawing.
 - Local saving, portable `.lotgrade` save/open, and elevation-preserving **DXF R2013 export** for every available drawing tool.
 - Explicit meters, international feet, and US survey feet; exported coordinates remain in project units with no origin shift or Z flattening.
 

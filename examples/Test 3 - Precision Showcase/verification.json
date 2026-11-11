@@ -1,0 +1,1525 @@
+{
+  "title": "Test 3 · Precision Showcase",
+  "description": "Illustrative house and corner lot demonstrating circular arcs, exact coordinates, survey bearings, object snaps, elevation acquisition, and DXF exchange.",
+  "units": "international feet",
+  "construction": "Actual native drawing tools and property controls; no direct injection of drawing entities.",
+  "actions": [
+    {
+      "kind": "grid-bypass-exact-entry",
+      "gridSpacing": 5,
+      "coordinatesIncludeQuarterFeet": true
+    },
+    {
+      "kind": "bearing-distance",
+      "bearing": 48.50353164478446,
+      "distance": 69.42621983083913,
+      "elevation": 105.25
+    },
+    {
+      "kind": "Midpoint",
+      "x": 77.5,
+      "y": 36.25,
+      "source": "Garage",
+      "acquireElevation": true,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Midpoint · Garage\nSource Z 104.75 · Match XYZ"
+    },
+    {
+      "kind": "Endpoint",
+      "x": 64.5,
+      "y": 36.25,
+      "source": "Garage",
+      "acquireElevation": true,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Endpoint · Garage\nSource Z 104.75 · Match XYZ\nTab cycles 1/5"
+    },
+    {
+      "kind": "Endpoint",
+      "x": 90.5,
+      "y": 36.25,
+      "source": "Garage",
+      "acquireElevation": true,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Endpoint · Garage\nSource Z 104.75 · Match XYZ\nTab cycles 1/5"
+    },
+    {
+      "kind": "bearing-distance",
+      "bearing": 0,
+      "distance": 8.25,
+      "elevation": 102.5
+    },
+    {
+      "kind": "Midpoint",
+      "x": 77.5,
+      "y": 36.25,
+      "source": "Garage",
+      "acquireElevation": true,
+      "cycles": 1,
+      "rejectedConflict": false,
+      "feedback": "Midpoint · Garage\nSource Z 104.75 · Match XYZ\nTab cycles 2/3"
+    },
+    {
+      "kind": "Endpoint",
+      "x": 96.5,
+      "y": 47.25,
+      "source": "Steps",
+      "acquireElevation": true,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Endpoint · Steps\nSource Z 104.875 · Match XYZ\nTab cycles 1/4"
+    },
+    {
+      "kind": "Endpoint",
+      "x": 102.5,
+      "y": 47.25,
+      "source": "Steps",
+      "acquireElevation": true,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Endpoint · Steps\nSource Z 104.875 · Match XYZ\nTab cycles 1/3"
+    },
+    {
+      "kind": "bearing-distance",
+      "bearing": 180,
+      "distance": 90.5,
+      "elevation": 102.25
+    },
+    {
+      "kind": "Point",
+      "x": 42.25,
+      "y": 8,
+      "source": "West outlet",
+      "acquireElevation": true,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Point · West outlet\nSource Z 101.5 · Match XYZ"
+    },
+    {
+      "kind": "Point",
+      "x": 170.25,
+      "y": 16.25,
+      "source": "East outlet",
+      "acquireElevation": true,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Point · East outlet\nSource Z 101.75 · Match XYZ"
+    },
+    {
+      "kind": "radius-and-direction-edit",
+      "feature": "T4",
+      "finalRadius": 6,
+      "finalDirection": "ccw"
+    },
+    {
+      "kind": "duplicate",
+      "source": "T4",
+      "copy": "T6",
+      "offset": [
+        10,
+        -10
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "x": 116.5,
+      "y": 61.25,
+      "source": "House",
+      "acquireElevation": false,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Endpoint · House\nSource Z 105.25 · XY only\nTab cycles 1/2"
+    },
+    {
+      "kind": "Arc center",
+      "x": 92.5,
+      "y": 119.25,
+      "source": "Patio",
+      "acquireElevation": true,
+      "cycles": 2,
+      "rejectedConflict": false,
+      "feedback": "Arc center · Patio\nSource Z 104.75 · Match XYZ\nTab cycles 3/3"
+    },
+    {
+      "kind": "Arc center",
+      "x": 151,
+      "y": 105,
+      "source": "Rain garden",
+      "acquireElevation": true,
+      "cycles": 2,
+      "rejectedConflict": false,
+      "feedback": "Arc center · Rain garden\nSource Z 102.75 · Match XYZ\nTab cycles 3/3"
+    },
+    {
+      "kind": "Midpoint",
+      "x": 143.22182540694797,
+      "y": 112.77817459305203,
+      "source": "Rain garden",
+      "acquireElevation": false,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Midpoint · Rain garden\nSource Z 102.75 · XY only\nTab cycles 1/2"
+    },
+    {
+      "kind": "Intersection",
+      "x": 149.75,
+      "y": 42.25,
+      "source": "Axis A",
+      "acquireElevation": true,
+      "cycles": 0,
+      "rejectedConflict": true,
+      "feedback": "Intersection · Axis A / Axis B\nDifferent source elevations · Match XYZ\nTab cycles 1/3"
+    },
+    {
+      "kind": "Intersection",
+      "x": 149.75,
+      "y": 42.25,
+      "source": "Axis A",
+      "acquireElevation": false,
+      "cycles": 0,
+      "rejectedConflict": false,
+      "feedback": "Intersection · Axis A / Axis B\nDifferent source elevations · XY only\nTab cycles 1/3"
+    },
+    {
+      "kind": "alt-grid-override",
+      "raw": [
+        163,
+        43.2
+      ],
+      "gridSpacing": 5,
+      "result": [
+        165,
+        45
+      ]
+    },
+    {
+      "kind": "undo-redo",
+      "feature": "Grid override"
+    }
+  ],
+  "arcControls": [
+    {
+      "sourceId": "4ca633df-0553-4adf-8d1a-7902d34f2142",
+      "segmentIndex": 4,
+      "center": [
+        26,
+        42,
+        102
+      ],
+      "radius": 26,
+      "sweepDegrees": 90,
+      "midpoint": [
+        7.6152236891497616,
+        23.61522368914976,
+        102
+      ]
+    },
+    {
+      "sourceId": "5ae96f6f-54a2-4eae-b993-18b82b2329b9",
+      "segmentIndex": 1,
+      "center": [
+        26,
+        42,
+        102
+      ],
+      "radius": 34,
+      "sweepDegrees": 90,
+      "midpoint": [
+        1.9583694396573819,
+        17.958369439657382,
+        102
+      ]
+    },
+    {
+      "sourceId": "29ac8e0a-fdb5-4ab5-9118-d5461d0898ac",
+      "segmentIndex": 1,
+      "center": [
+        26,
+        42,
+        101.75
+      ],
+      "radius": 46,
+      "sweepDegrees": 90,
+      "midpoint": [
+        -6.526911934581186,
+        9.473088065418814,
+        101.75
+      ]
+    },
+    {
+      "sourceId": "336687ee-a01e-4cb5-8feb-c4f1d7418f1f",
+      "segmentIndex": 1,
+      "center": [
+        62.5,
+        40.25,
+        102.5
+      ],
+      "radius": 24,
+      "sweepDegrees": 90,
+      "midpoint": [
+        45.52943725152286,
+        23.279437251522857,
+        102.5
+      ]
+    },
+    {
+      "sourceId": "336687ee-a01e-4cb5-8feb-c4f1d7418f1f",
+      "segmentIndex": 3,
+      "center": [
+        62.5,
+        133.25,
+        102.5
+      ],
+      "radius": 24,
+      "sweepDegrees": 90,
+      "midpoint": [
+        45.52943725152286,
+        150.22056274847714,
+        102.5
+      ]
+    },
+    {
+      "sourceId": "336687ee-a01e-4cb5-8feb-c4f1d7418f1f",
+      "segmentIndex": 5,
+      "center": [
+        118.5,
+        133.25,
+        102.5
+      ],
+      "radius": 24,
+      "sweepDegrees": 90,
+      "midpoint": [
+        135.47056274847714,
+        150.22056274847714,
+        102.5
+      ]
+    },
+    {
+      "sourceId": "336687ee-a01e-4cb5-8feb-c4f1d7418f1f",
+      "segmentIndex": 7,
+      "center": [
+        118.5,
+        40.25,
+        102.5
+      ],
+      "radius": 24,
+      "sweepDegrees": 90,
+      "midpoint": [
+        135.47056274847714,
+        23.279437251522857,
+        102.5
+      ]
+    },
+    {
+      "sourceId": "5ea308a9-6ecf-489c-ad0c-a345aa2cd28e",
+      "segmentIndex": 1,
+      "center": [
+        62.5,
+        40.25,
+        103
+      ],
+      "radius": 20,
+      "sweepDegrees": 90,
+      "midpoint": [
+        48.35786437626905,
+        26.10786437626905,
+        103
+      ]
+    },
+    {
+      "sourceId": "5ea308a9-6ecf-489c-ad0c-a345aa2cd28e",
+      "segmentIndex": 3,
+      "center": [
+        62.5,
+        133.25,
+        103
+      ],
+      "radius": 20,
+      "sweepDegrees": 90,
+      "midpoint": [
+        48.35786437626905,
+        147.39213562373095,
+        103
+      ]
+    },
+    {
+      "sourceId": "5ea308a9-6ecf-489c-ad0c-a345aa2cd28e",
+      "segmentIndex": 5,
+      "center": [
+        118.5,
+        133.25,
+        103
+      ],
+      "radius": 20,
+      "sweepDegrees": 90,
+      "midpoint": [
+        132.64213562373095,
+        147.39213562373095,
+        103
+      ]
+    },
+    {
+      "sourceId": "5ea308a9-6ecf-489c-ad0c-a345aa2cd28e",
+      "segmentIndex": 7,
+      "center": [
+        118.5,
+        40.25,
+        103
+      ],
+      "radius": 20,
+      "sweepDegrees": 90,
+      "midpoint": [
+        132.64213562373095,
+        26.10786437626905,
+        103
+      ]
+    },
+    {
+      "sourceId": "3c317ab8-c639-4a25-a291-a7cb22f7c483",
+      "segmentIndex": 1,
+      "center": [
+        62.5,
+        40.25,
+        103.5
+      ],
+      "radius": 16,
+      "sweepDegrees": 90,
+      "midpoint": [
+        51.18629150101524,
+        28.93629150101524,
+        103.5
+      ]
+    },
+    {
+      "sourceId": "3c317ab8-c639-4a25-a291-a7cb22f7c483",
+      "segmentIndex": 3,
+      "center": [
+        62.5,
+        133.25,
+        103.5
+      ],
+      "radius": 16,
+      "sweepDegrees": 90,
+      "midpoint": [
+        51.18629150101524,
+        144.56370849898477,
+        103.5
+      ]
+    },
+    {
+      "sourceId": "3c317ab8-c639-4a25-a291-a7cb22f7c483",
+      "segmentIndex": 5,
+      "center": [
+        118.5,
+        133.25,
+        103.5
+      ],
+      "radius": 16,
+      "sweepDegrees": 90,
+      "midpoint": [
+        129.81370849898477,
+        144.56370849898477,
+        103.5
+      ]
+    },
+    {
+      "sourceId": "3c317ab8-c639-4a25-a291-a7cb22f7c483",
+      "segmentIndex": 7,
+      "center": [
+        118.5,
+        40.25,
+        103.5
+      ],
+      "radius": 16,
+      "sweepDegrees": 90,
+      "midpoint": [
+        129.81370849898477,
+        28.93629150101524,
+        103.5
+      ]
+    },
+    {
+      "sourceId": "b5f26568-2957-4c7e-bb6c-861bcea8dc9a",
+      "segmentIndex": 1,
+      "center": [
+        62.5,
+        40.25,
+        104
+      ],
+      "radius": 12,
+      "sweepDegrees": 90,
+      "midpoint": [
+        54.01471862576143,
+        31.76471862576143,
+        104
+      ]
+    },
+    {
+      "sourceId": "b5f26568-2957-4c7e-bb6c-861bcea8dc9a",
+      "segmentIndex": 3,
+      "center": [
+        62.5,
+        133.25,
+        104
+      ],
+      "radius": 12,
+      "sweepDegrees": 90,
+      "midpoint": [
+        54.01471862576143,
+        141.73528137423858,
+        104
+      ]
+    },
+    {
+      "sourceId": "b5f26568-2957-4c7e-bb6c-861bcea8dc9a",
+      "segmentIndex": 5,
+      "center": [
+        118.5,
+        133.25,
+        104
+      ],
+      "radius": 12,
+      "sweepDegrees": 90,
+      "midpoint": [
+        126.98528137423857,
+        141.73528137423858,
+        104
+      ]
+    },
+    {
+      "sourceId": "b5f26568-2957-4c7e-bb6c-861bcea8dc9a",
+      "segmentIndex": 7,
+      "center": [
+        118.5,
+        40.25,
+        104
+      ],
+      "radius": 12,
+      "sweepDegrees": 90,
+      "midpoint": [
+        126.98528137423857,
+        31.76471862576143,
+        104
+      ]
+    },
+    {
+      "sourceId": "aa7dfbf6-6c7c-4250-9a7d-bb27d6a20838",
+      "segmentIndex": 1,
+      "center": [
+        62.5,
+        40.25,
+        104.5
+      ],
+      "radius": 8,
+      "sweepDegrees": 90,
+      "midpoint": [
+        56.84314575050762,
+        34.59314575050762,
+        104.5
+      ]
+    },
+    {
+      "sourceId": "aa7dfbf6-6c7c-4250-9a7d-bb27d6a20838",
+      "segmentIndex": 3,
+      "center": [
+        62.5,
+        133.25,
+        104.5
+      ],
+      "radius": 8,
+      "sweepDegrees": 90,
+      "midpoint": [
+        56.84314575050762,
+        138.90685424949237,
+        104.5
+      ]
+    },
+    {
+      "sourceId": "aa7dfbf6-6c7c-4250-9a7d-bb27d6a20838",
+      "segmentIndex": 5,
+      "center": [
+        118.5,
+        133.25,
+        104.5
+      ],
+      "radius": 8,
+      "sweepDegrees": 90,
+      "midpoint": [
+        124.15685424949238,
+        138.90685424949237,
+        104.5
+      ]
+    },
+    {
+      "sourceId": "aa7dfbf6-6c7c-4250-9a7d-bb27d6a20838",
+      "segmentIndex": 7,
+      "center": [
+        118.5,
+        40.25,
+        104.5
+      ],
+      "radius": 8,
+      "sweepDegrees": 90,
+      "midpoint": [
+        124.15685424949238,
+        34.59314575050762,
+        104.5
+      ]
+    },
+    {
+      "sourceId": "dfbe6b4e-4d2e-46ca-81f8-9dc3eea7b191",
+      "segmentIndex": 2,
+      "center": [
+        92.5,
+        119.25,
+        104.75
+      ],
+      "radius": 16,
+      "sweepDegrees": 180,
+      "midpoint": [
+        92.5,
+        135.25,
+        104.75
+      ]
+    },
+    {
+      "sourceId": "edc67ec7-15ed-47c3-977a-79446b385bbb",
+      "segmentIndex": 0,
+      "center": [
+        151,
+        105,
+        102.75
+      ],
+      "radius": 11,
+      "sweepDegrees": 270,
+      "midpoint": [
+        143.22182540694797,
+        112.77817459305203,
+        102.75
+      ]
+    },
+    {
+      "sourceId": "3b9a5009-033f-4ac1-a928-5c1300156244",
+      "segmentIndex": 0,
+      "center": [
+        18,
+        70,
+        102.5
+      ],
+      "radius": 5.5,
+      "sweepDegrees": 180,
+      "midpoint": [
+        18,
+        75.5,
+        102.5
+      ]
+    },
+    {
+      "sourceId": "3b9a5009-033f-4ac1-a928-5c1300156244",
+      "segmentIndex": 1,
+      "center": [
+        18,
+        70,
+        102.5
+      ],
+      "radius": 5.5,
+      "sweepDegrees": 180,
+      "midpoint": [
+        18,
+        64.5,
+        102.5
+      ]
+    },
+    {
+      "sourceId": "ffdd1aeb-6571-4a32-acd7-a36a599fafdf",
+      "segmentIndex": 0,
+      "center": [
+        19,
+        106,
+        103
+      ],
+      "radius": 6,
+      "sweepDegrees": 180,
+      "midpoint": [
+        19,
+        112,
+        103
+      ]
+    },
+    {
+      "sourceId": "ffdd1aeb-6571-4a32-acd7-a36a599fafdf",
+      "segmentIndex": 1,
+      "center": [
+        19,
+        106,
+        103
+      ],
+      "radius": 6,
+      "sweepDegrees": 180,
+      "midpoint": [
+        19,
+        100,
+        103
+      ]
+    },
+    {
+      "sourceId": "bfcc3640-0613-40f7-aa7b-b52fb1ee35fc",
+      "segmentIndex": 0,
+      "center": [
+        22,
+        141,
+        103.5
+      ],
+      "radius": 5.5,
+      "sweepDegrees": 180,
+      "midpoint": [
+        22,
+        135.5,
+        103.5
+      ]
+    },
+    {
+      "sourceId": "bfcc3640-0613-40f7-aa7b-b52fb1ee35fc",
+      "segmentIndex": 1,
+      "center": [
+        22,
+        141,
+        103.5
+      ],
+      "radius": 5.5,
+      "sweepDegrees": 180,
+      "midpoint": [
+        22,
+        146.5,
+        103.5
+      ]
+    },
+    {
+      "sourceId": "7b0e8811-c2bd-4be2-bfc9-360c6902c0f9",
+      "segmentIndex": 0,
+      "center": [
+        155,
+        142,
+        103.25
+      ],
+      "radius": 6,
+      "sweepDegrees": 180,
+      "midpoint": [
+        155,
+        148,
+        103.25
+      ]
+    },
+    {
+      "sourceId": "7b0e8811-c2bd-4be2-bfc9-360c6902c0f9",
+      "segmentIndex": 1,
+      "center": [
+        155,
+        142,
+        103.25
+      ],
+      "radius": 6,
+      "sweepDegrees": 180,
+      "midpoint": [
+        155,
+        136,
+        103.25
+      ]
+    },
+    {
+      "sourceId": "cd5c29a1-001a-4d6c-9a56-46c7a1af232b",
+      "segmentIndex": 0,
+      "center": [
+        158,
+        71,
+        102.5
+      ],
+      "radius": 5,
+      "sweepDegrees": 180,
+      "midpoint": [
+        158,
+        66,
+        102.5
+      ]
+    },
+    {
+      "sourceId": "cd5c29a1-001a-4d6c-9a56-46c7a1af232b",
+      "segmentIndex": 1,
+      "center": [
+        158,
+        71,
+        102.5
+      ],
+      "radius": 5,
+      "sweepDegrees": 180,
+      "midpoint": [
+        158,
+        76,
+        102.5
+      ]
+    },
+    {
+      "sourceId": "651ea023-a296-4b81-af54-f83d760730ea",
+      "segmentIndex": 0,
+      "center": [
+        165,
+        132,
+        103.25
+      ],
+      "radius": 6,
+      "sweepDegrees": 180,
+      "midpoint": [
+        165,
+        138,
+        103.25
+      ]
+    },
+    {
+      "sourceId": "651ea023-a296-4b81-af54-f83d760730ea",
+      "segmentIndex": 1,
+      "center": [
+        165,
+        132,
+        103.25
+      ],
+      "radius": 6,
+      "sweepDegrees": 180,
+      "midpoint": [
+        165,
+        126,
+        103.25
+      ]
+    }
+  ],
+  "knownControls": {
+    "Garage threshold": {
+      "x": 77.5,
+      "y": 36.25,
+      "z": 104.75
+    },
+    "West outlet": {
+      "x": 42.25,
+      "y": 8,
+      "z": 101.5
+    },
+    "East outlet": {
+      "x": 170.25,
+      "y": 16.25,
+      "z": 101.75
+    },
+    "Garage slab": {
+      "x": 76.5,
+      "y": 49.25,
+      "z": 104.75
+    },
+    "House FFE": {
+      "x": 100,
+      "y": 77.25,
+      "z": 105.25
+    },
+    "FG at house": {
+      "x": 116.5,
+      "y": 61.25,
+      "z": 104.75
+    },
+    "Entry threshold": {
+      "x": 92.5,
+      "y": 58.25,
+      "z": 105
+    },
+    "Deck level": {
+      "x": 92.5,
+      "y": 113.25,
+      "z": 105
+    },
+    "Patio center": {
+      "x": 92.5,
+      "y": 119.25,
+      "z": 104.75
+    },
+    "Rain garden low": {
+      "x": 151,
+      "y": 105,
+      "z": 102.75
+    },
+    "Rain garden rim": {
+      "x": 143.22182540694797,
+      "y": 112.77817459305203,
+      "z": 103.25
+    },
+    "XY-only crossing": {
+      "x": 149.75,
+      "y": 42.25,
+      "z": 102.375
+    },
+    "Grid override": {
+      "x": 165,
+      "y": 45,
+      "z": 102.875
+    }
+  },
+  "completedFeatures": [
+    "Corner lot",
+    "Curb",
+    "Street edge",
+    "Sidewalk",
+    "Contour 102.50",
+    "Contour 103.00",
+    "Contour 103.50",
+    "Contour 104.00",
+    "Contour 104.50",
+    "House",
+    "Garage",
+    "Porch",
+    "Steps",
+    "Deck",
+    "Patio",
+    "Garage threshold",
+    "West outlet",
+    "East outlet",
+    "Drive W",
+    "Drive E",
+    "Drive CL",
+    "Walk W",
+    "Walk E",
+    "Swale W",
+    "Swale E",
+    "Rain garden",
+    "Axis A",
+    "Axis B",
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6",
+    "Room A",
+    "Hall",
+    "Kitchen",
+    "Garage slab",
+    "House FFE",
+    "FG at house",
+    "Entry threshold",
+    "Deck level",
+    "Patio center",
+    "Rain garden low",
+    "Rain garden rim",
+    "XY-only crossing",
+    "Grid override"
+  ],
+  "projectId": "8cbbb325-4be8-4b3d-bd16-650fb3f33432",
+  "entityCount": 47,
+  "arcCount": 37,
+  "counts": {
+    "boundary": 3,
+    "polyline": 21,
+    "contour": 5,
+    "building": 5,
+    "point": 13
+  },
+  "expected": {
+    "insunits": 2,
+    "measurement": 0,
+    "primaryEntityCount": 47,
+    "pointCount": 13,
+    "textCount": 13,
+    "lwpolylineCount": 27,
+    "polyline3dCount": 7,
+    "arcControls": [
+      {
+        "sourceId": "4ca633df-0553-4adf-8d1a-7902d34f2142",
+        "segmentIndex": 4,
+        "center": [
+          26,
+          42,
+          102
+        ],
+        "radius": 26,
+        "sweepDegrees": 90,
+        "midpoint": [
+          7.6152236891497616,
+          23.61522368914976,
+          102
+        ]
+      },
+      {
+        "sourceId": "5ae96f6f-54a2-4eae-b993-18b82b2329b9",
+        "segmentIndex": 1,
+        "center": [
+          26,
+          42,
+          102
+        ],
+        "radius": 34,
+        "sweepDegrees": 90,
+        "midpoint": [
+          1.9583694396573819,
+          17.958369439657382,
+          102
+        ]
+      },
+      {
+        "sourceId": "29ac8e0a-fdb5-4ab5-9118-d5461d0898ac",
+        "segmentIndex": 1,
+        "center": [
+          26,
+          42,
+          101.75
+        ],
+        "radius": 46,
+        "sweepDegrees": 90,
+        "midpoint": [
+          -6.526911934581186,
+          9.473088065418814,
+          101.75
+        ]
+      },
+      {
+        "sourceId": "336687ee-a01e-4cb5-8feb-c4f1d7418f1f",
+        "segmentIndex": 1,
+        "center": [
+          62.5,
+          40.25,
+          102.5
+        ],
+        "radius": 24,
+        "sweepDegrees": 90,
+        "midpoint": [
+          45.52943725152286,
+          23.279437251522857,
+          102.5
+        ]
+      },
+      {
+        "sourceId": "336687ee-a01e-4cb5-8feb-c4f1d7418f1f",
+        "segmentIndex": 3,
+        "center": [
+          62.5,
+          133.25,
+          102.5
+        ],
+        "radius": 24,
+        "sweepDegrees": 90,
+        "midpoint": [
+          45.52943725152286,
+          150.22056274847714,
+          102.5
+        ]
+      },
+      {
+        "sourceId": "336687ee-a01e-4cb5-8feb-c4f1d7418f1f",
+        "segmentIndex": 5,
+        "center": [
+          118.5,
+          133.25,
+          102.5
+        ],
+        "radius": 24,
+        "sweepDegrees": 90,
+        "midpoint": [
+          135.47056274847714,
+          150.22056274847714,
+          102.5
+        ]
+      },
+      {
+        "sourceId": "336687ee-a01e-4cb5-8feb-c4f1d7418f1f",
+        "segmentIndex": 7,
+        "center": [
+          118.5,
+          40.25,
+          102.5
+        ],
+        "radius": 24,
+        "sweepDegrees": 90,
+        "midpoint": [
+          135.47056274847714,
+          23.279437251522857,
+          102.5
+        ]
+      },
+      {
+        "sourceId": "5ea308a9-6ecf-489c-ad0c-a345aa2cd28e",
+        "segmentIndex": 1,
+        "center": [
+          62.5,
+          40.25,
+          103
+        ],
+        "radius": 20,
+        "sweepDegrees": 90,
+        "midpoint": [
+          48.35786437626905,
+          26.10786437626905,
+          103
+        ]
+      },
+      {
+        "sourceId": "5ea308a9-6ecf-489c-ad0c-a345aa2cd28e",
+        "segmentIndex": 3,
+        "center": [
+          62.5,
+          133.25,
+          103
+        ],
+        "radius": 20,
+        "sweepDegrees": 90,
+        "midpoint": [
+          48.35786437626905,
+          147.39213562373095,
+          103
+        ]
+      },
+      {
+        "sourceId": "5ea308a9-6ecf-489c-ad0c-a345aa2cd28e",
+        "segmentIndex": 5,
+        "center": [
+          118.5,
+          133.25,
+          103
+        ],
+        "radius": 20,
+        "sweepDegrees": 90,
+        "midpoint": [
+          132.64213562373095,
+          147.39213562373095,
+          103
+        ]
+      },
+      {
+        "sourceId": "5ea308a9-6ecf-489c-ad0c-a345aa2cd28e",
+        "segmentIndex": 7,
+        "center": [
+          118.5,
+          40.25,
+          103
+        ],
+        "radius": 20,
+        "sweepDegrees": 90,
+        "midpoint": [
+          132.64213562373095,
+          26.10786437626905,
+          103
+        ]
+      },
+      {
+        "sourceId": "3c317ab8-c639-4a25-a291-a7cb22f7c483",
+        "segmentIndex": 1,
+        "center": [
+          62.5,
+          40.25,
+          103.5
+        ],
+        "radius": 16,
+        "sweepDegrees": 90,
+        "midpoint": [
+          51.18629150101524,
+          28.93629150101524,
+          103.5
+        ]
+      },
+      {
+        "sourceId": "3c317ab8-c639-4a25-a291-a7cb22f7c483",
+        "segmentIndex": 3,
+        "center": [
+          62.5,
+          133.25,
+          103.5
+        ],
+        "radius": 16,
+        "sweepDegrees": 90,
+        "midpoint": [
+          51.18629150101524,
+          144.56370849898477,
+          103.5
+        ]
+      },
+      {
+        "sourceId": "3c317ab8-c639-4a25-a291-a7cb22f7c483",
+        "segmentIndex": 5,
+        "center": [
+          118.5,
+          133.25,
+          103.5
+        ],
+        "radius": 16,
+        "sweepDegrees": 90,
+        "midpoint": [
+          129.81370849898477,
+          144.56370849898477,
+          103.5
+        ]
+      },
+      {
+        "sourceId": "3c317ab8-c639-4a25-a291-a7cb22f7c483",
+        "segmentIndex": 7,
+        "center": [
+          118.5,
+          40.25,
+          103.5
+        ],
+        "radius": 16,
+        "sweepDegrees": 90,
+        "midpoint": [
+          129.81370849898477,
+          28.93629150101524,
+          103.5
+        ]
+      },
+      {
+        "sourceId": "b5f26568-2957-4c7e-bb6c-861bcea8dc9a",
+        "segmentIndex": 1,
+        "center": [
+          62.5,
+          40.25,
+          104
+        ],
+        "radius": 12,
+        "sweepDegrees": 90,
+        "midpoint": [
+          54.01471862576143,
+          31.76471862576143,
+          104
+        ]
+      },
+      {
+        "sourceId": "b5f26568-2957-4c7e-bb6c-861bcea8dc9a",
+        "segmentIndex": 3,
+        "center": [
+          62.5,
+          133.25,
+          104
+        ],
+        "radius": 12,
+        "sweepDegrees": 90,
+        "midpoint": [
+          54.01471862576143,
+          141.73528137423858,
+          104
+        ]
+      },
+      {
+        "sourceId": "b5f26568-2957-4c7e-bb6c-861bcea8dc9a",
+        "segmentIndex": 5,
+        "center": [
+          118.5,
+          133.25,
+          104
+        ],
+        "radius": 12,
+        "sweepDegrees": 90,
+        "midpoint": [
+          126.98528137423857,
+          141.73528137423858,
+          104
+        ]
+      },
+      {
+        "sourceId": "b5f26568-2957-4c7e-bb6c-861bcea8dc9a",
+        "segmentIndex": 7,
+        "center": [
+          118.5,
+          40.25,
+          104
+        ],
+        "radius": 12,
+        "sweepDegrees": 90,
+        "midpoint": [
+          126.98528137423857,
+          31.76471862576143,
+          104
+        ]
+      },
+      {
+        "sourceId": "aa7dfbf6-6c7c-4250-9a7d-bb27d6a20838",
+        "segmentIndex": 1,
+        "center": [
+          62.5,
+          40.25,
+          104.5
+        ],
+        "radius": 8,
+        "sweepDegrees": 90,
+        "midpoint": [
+          56.84314575050762,
+          34.59314575050762,
+          104.5
+        ]
+      },
+      {
+        "sourceId": "aa7dfbf6-6c7c-4250-9a7d-bb27d6a20838",
+        "segmentIndex": 3,
+        "center": [
+          62.5,
+          133.25,
+          104.5
+        ],
+        "radius": 8,
+        "sweepDegrees": 90,
+        "midpoint": [
+          56.84314575050762,
+          138.90685424949237,
+          104.5
+        ]
+      },
+      {
+        "sourceId": "aa7dfbf6-6c7c-4250-9a7d-bb27d6a20838",
+        "segmentIndex": 5,
+        "center": [
+          118.5,
+          133.25,
+          104.5
+        ],
+        "radius": 8,
+        "sweepDegrees": 90,
+        "midpoint": [
+          124.15685424949238,
+          138.90685424949237,
+          104.5
+        ]
+      },
+      {
+        "sourceId": "aa7dfbf6-6c7c-4250-9a7d-bb27d6a20838",
+        "segmentIndex": 7,
+        "center": [
+          118.5,
+          40.25,
+          104.5
+        ],
+        "radius": 8,
+        "sweepDegrees": 90,
+        "midpoint": [
+          124.15685424949238,
+          34.59314575050762,
+          104.5
+        ]
+      },
+      {
+        "sourceId": "dfbe6b4e-4d2e-46ca-81f8-9dc3eea7b191",
+        "segmentIndex": 2,
+        "center": [
+          92.5,
+          119.25,
+          104.75
+        ],
+        "radius": 16,
+        "sweepDegrees": 180,
+        "midpoint": [
+          92.5,
+          135.25,
+          104.75
+        ]
+      },
+      {
+        "sourceId": "edc67ec7-15ed-47c3-977a-79446b385bbb",
+        "segmentIndex": 0,
+        "center": [
+          151,
+          105,
+          102.75
+        ],
+        "radius": 11,
+        "sweepDegrees": 270,
+        "midpoint": [
+          143.22182540694797,
+          112.77817459305203,
+          102.75
+        ]
+      },
+      {
+        "sourceId": "3b9a5009-033f-4ac1-a928-5c1300156244",
+        "segmentIndex": 0,
+        "center": [
+          18,
+          70,
+          102.5
+        ],
+        "radius": 5.5,
+        "sweepDegrees": 180,
+        "midpoint": [
+          18,
+          75.5,
+          102.5
+        ]
+      },
+      {
+        "sourceId": "3b9a5009-033f-4ac1-a928-5c1300156244",
+        "segmentIndex": 1,
+        "center": [
+          18,
+          70,
+          102.5
+        ],
+        "radius": 5.5,
+        "sweepDegrees": 180,
+        "midpoint": [
+          18,
+          64.5,
+          102.5
+        ]
+      },
+      {
+        "sourceId": "ffdd1aeb-6571-4a32-acd7-a36a599fafdf",
+        "segmentIndex": 0,
+        "center": [
+          19,
+          106,
+          103
+        ],
+        "radius": 6,
+        "sweepDegrees": 180,
+        "midpoint": [
+          19,
+          112,
+          103
+        ]
+      },
+      {
+        "sourceId": "ffdd1aeb-6571-4a32-acd7-a36a599fafdf",
+        "segmentIndex": 1,
+        "center": [
+          19,
+          106,
+          103
+        ],
+        "radius": 6,
+        "sweepDegrees": 180,
+        "midpoint": [
+          19,
+          100,
+          103
+        ]
+      },
+      {
+        "sourceId": "bfcc3640-0613-40f7-aa7b-b52fb1ee35fc",
+        "segmentIndex": 0,
+        "center": [
+          22,
+          141,
+          103.5
+        ],
+        "radius": 5.5,
+        "sweepDegrees": 180,
+        "midpoint": [
+          22,
+          135.5,
+          103.5
+        ]
+      },
+      {
+        "sourceId": "bfcc3640-0613-40f7-aa7b-b52fb1ee35fc",
+        "segmentIndex": 1,
+        "center": [
+          22,
+          141,
+          103.5
+        ],
+        "radius": 5.5,
+        "sweepDegrees": 180,
+        "midpoint": [
+          22,
+          146.5,
+          103.5
+        ]
+      },
+      {
+        "sourceId": "7b0e8811-c2bd-4be2-bfc9-360c6902c0f9",
+        "segmentIndex": 0,
+        "center": [
+          155,
+          142,
+          103.25
+        ],
+        "radius": 6,
+        "sweepDegrees": 180,
+        "midpoint": [
+          155,
+          148,
+          103.25
+        ]
+      },
+      {
+        "sourceId": "7b0e8811-c2bd-4be2-bfc9-360c6902c0f9",
+        "segmentIndex": 1,
+        "center": [
+          155,
+          142,
+          103.25
+        ],
+        "radius": 6,
+        "sweepDegrees": 180,
+        "midpoint": [
+          155,
+          136,
+          103.25
+        ]
+      },
+      {
+        "sourceId": "cd5c29a1-001a-4d6c-9a56-46c7a1af232b",
+        "segmentIndex": 0,
+        "center": [
+          158,
+          71,
+          102.5
+        ],
+        "radius": 5,
+        "sweepDegrees": 180,
+        "midpoint": [
+          158,
+          66,
+          102.5
+        ]
+      },
+      {
+        "sourceId": "cd5c29a1-001a-4d6c-9a56-46c7a1af232b",
+        "segmentIndex": 1,
+        "center": [
+          158,
+          71,
+          102.5
+        ],
+        "radius": 5,
+        "sweepDegrees": 180,
+        "midpoint": [
+          158,
+          76,
+          102.5
+        ]
+      },
+      {
+        "sourceId": "651ea023-a296-4b81-af54-f83d760730ea",
+        "segmentIndex": 0,
+        "center": [
+          165,
+          132,
+          103.25
+        ],
+        "radius": 6,
+        "sweepDegrees": 180,
+        "midpoint": [
+          165,
+          138,
+          103.25
+        ]
+      },
+      {
+        "sourceId": "651ea023-a296-4b81-af54-f83d760730ea",
+        "segmentIndex": 1,
+        "center": [
+          165,
+          132,
+          103.25
+        ],
+        "radius": 6,
+        "sweepDegrees": 180,
+        "midpoint": [
+          165,
+          126,
+          103.25
+        ]
+      }
+    ]
+  }
+}

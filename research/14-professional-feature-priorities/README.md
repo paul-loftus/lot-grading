@@ -4,6 +4,10 @@
 
 Planning date: **November 10, 2026**. Baseline: the curve-capable application at `2def453`. This document is a proposed backlog, not an implementation record. No features are implemented by this planning update.
 
+## Implementation checkpoint · November 10, 2026
+
+The planning documentation was committed and pushed as `16c76bc`. The subsequent feature 1 implementation adds endpoint/point/midpoint/arc-center/intersection snaps, visible feedback, target cycling and a temporary override, explicit XY-versus-source-Z behavior, exact coordinate entry, and survey bearing/distance placement. The current tutorial documents that first usable scope. Perpendicular, tangent, and tracking snaps remain later refinements. Features 2–4 have not been started at this checkpoint.
+
 ## Recommendation
 
 Prioritize a complete real-lot workflow: **bring in existing information → draw and connect precisely → check grades → save a clear project revision → hand it back to Civil 3D**. Then extend that workflow with design controls, terrain surfaces, and bounded grading assistance.
@@ -14,7 +18,7 @@ The ranking combines observed gaps in the current code, the user's recent file-l
 
 The application already has a project library, portable project copies, automatic library saves with atomic file replacement, undo/redo, post-placement numeric vertex editing, grid snapping, single-feature movement/duplication, exact planar circular arcs, basic plan measurements, editable DXF layer names, and DXF export.
 
-The important gaps are object snapping, precise entry during drawing, survey/reference import, remembered working-file locations, revision recovery, grade calculations, a fuller editing workflow, layer visibility/locking, semantic grading controls, and a terrain engine. Current curves have one elevation throughout. Manually drawn contours do not establish a continuous ground surface.
+At the planning baseline, the important gaps were object snapping, precise entry during drawing, survey/reference import, remembered working-file locations, revision recovery, grade calculations, a fuller editing workflow, layer visibility/locking, semantic grading controls, and a terrain engine. See the implementation checkpoint above for subsequent progress. Current curves have one elevation throughout. Manually drawn contours do not establish a continuous ground surface.
 
 ## Priority list
 
@@ -166,7 +170,7 @@ Use pilot evidence to choose the first template types. Townhouse rows require sh
 3. **Actual surface-based grading: priorities 8–10.** Build and inspect terrain, prove surface handoff, then add bounded grading operations and diagnostics.
 4. **Review and repeated production: priorities 11–12.** Add sections/quantities and reuse workflows validated on real lots.
 
-The smallest next implementation ticket should be **endpoint/point snapping plus visible snap feedback and explicit XY-versus-Z behavior**. That is a testable slice of priority 1, not a commitment to deliver every snap type at once.
+The recommended first implementation ticket was **endpoint/point snapping plus visible snap feedback and explicit XY-versus-Z behavior**. The implementation checkpoint above now records the first precision controls. The next unstarted feature is priority 2, survey/reference import; perpendicular/tangent/tracking snaps remain refinements to priority 1.
 
 ## Professional readiness alongside the feature work
 
@@ -178,4 +182,4 @@ Avoid calendar promises until the first scoped feature and pilot inputs are agre
 
 ## Scope of this update
 
-This update creates a planning document and links it from the existing roadmap and research index. It does not change source code, project files, dependencies, the DXF contract, or any application behavior. The [current tutorial](../../docs/tutorial/README.md) remains the reference for implemented features.
+The original planning update created this document and linked it from the existing roadmap and research index without changing application behavior. The later implementation checkpoint above records feature 1 separately. The [current tutorial](../../docs/tutorial/README.md) remains the reference for implemented features.

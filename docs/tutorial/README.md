@@ -4,9 +4,11 @@
 
 This guide walks through drawing a small residential lot, assigning elevations, making lines meet, drawing true circular arcs, and saving/exporting your work. Allow about 20–30 minutes for the first pass.
 
-The current application supports manually drawn, elevated linework and circular arcs. Arbitrary splines, automatic smoothing, endpoint snapping/joining, slope calculations, and automatic grading are not available yet. All sample coordinates are illustrative.
+The current application supports manually drawn, elevated linework, circular arcs, object snapping, and exact placement while drawing. Arbitrary splines, automatic smoothing, automatic joins, slope calculations, and automatic grading are not available yet. All sample coordinates are illustrative.
 
 This guide includes the curve update after the original `rev-0` snapshot. If your app does not show **Segment type**, rebuild and launch the current source with `npm start`; the original Rev 0 bundles do not contain these controls.
+
+The subsequent precision update adds **Object snap** and **Precise placement**. Rebuild and relaunch the source to use these controls; older bundles may not include them.
 
 ## Contents
 
@@ -71,9 +73,23 @@ Try these controls:
 
 With nothing selected, the right panel shows **Grid spacing** and **Contour step**. Leave both at `1` for now, with **Grid snap ON** in the top toolbar.
 
-Grid snap rounds newly placed X/Y positions to the chosen spacing. It does not snap to existing endpoints. At a distant zoom level, the displayed grid can show larger intervals than the actual snap spacing.
+Grid snap rounds newly placed X/Y positions to the chosen spacing. **Object snap**, enabled separately in the top toolbar, takes precedence when a geometry target is close enough. At a distant zoom level, the displayed grid can show larger intervals than the actual grid snap spacing.
 
 **For precise placement throughout this tutorial:** draw the required number of points approximately, select the finished feature, expand **Vertex coordinates**, and enter its exact X, Y, and Z values. Press **Enter** after each field to commit it. Numeric coordinate editing accepts fractional values even when grid snap is on.
+
+### Place exact coordinates while drawing
+
+Choose a drawing tool and expand **Precise placement** in Properties. Under **Coordinates**, enter **Easting X** and **Northing Y**, then click **Place point**. The point uses **Drawing elevation** and bypasses grid/object snapping. Repeat for the next vertex, or for a second rectangle corner. A point on an arc is entered in the same start → through → endpoint order as clicking. Use **Finish line/boundary** outside the placement form when the feature is ready; Enter inside the form places the entered point.
+
+After placing a start point, choose **Bearing / distance** to place the next point relative to the last pick. Bearings are decimal degrees clockwise from north: 0 north, 90 east, 180 south, 270 west. Distance is horizontal and uses the project units. For an arc's pending endpoint, the last pick is its through-point.
+
+### Snap to existing geometry
+
+With **Object snap ON**, move near an endpoint, spot, midpoint, arc center, or intersection. A marker and feedback identify the exact target. Arc midpoints follow the curve rather than its chord. Click to acquire the shown target. **Tab** cycles nearby targets; **Alt/Option** temporarily bypasses object snapping while leaving the grid setting in effect.
+
+Snaps use **XY only** by default. To acquire the source Z too, expand **Object snap settings** and enable **Match target elevation**. A contour can acquire its drawing elevation from its first snap; later contour/arc picks must remain compatible with the path's single elevation. Intersections with different source elevations cannot supply one Z: leave elevation matching off for an XY-only snap. Intersection snapping can be disabled separately.
+
+Snapping affects placement, not existing-feature dragging, and does not create a persistent relationship. Intersection search is bounded to 128 nearby segments; up to 24 closest snap targets can be cycled. For very dense or ambiguous geometry, disable intersection snapping and use exact coordinate entry.
 
 ## 4. Draw the lot boundary
 
@@ -149,14 +165,14 @@ Its first and last vertices now exactly match the two spot elevations. This line
 
 ### Make two separate lines meet exactly
 
-1. Select the first line and expand **Vertex coordinates**.
-2. Read the X, Y, and Z of the endpoint you want to connect to. For the driveway above, vertex 3 is `(44.5, 39, 103.5)`.
-3. Draw and finish a second polyline.
-4. Select the second line and give its starting vertex those same three values. Set its remaining vertices where you want the line to go.
+1. Turn **Object snap ON**, choose **Polyline**, and move near the first line's endpoint.
+2. Confirm the feedback identifies the intended endpoint. Use Tab if several targets overlap.
+3. Keep **Match target elevation** off to match XY only, or enable it to acquire the endpoint's Z as well.
+4. Click to place the second line's start, place the remaining points, and finish. Alternatively, use Precise placement or copy the endpoint's X/Y/Z through Vertex coordinates.
 
 Matching X/Y makes lines meet in plan. Matching Z as well makes them meet at the same elevation. Merely crossing two lines on screen does not create a vertex at their intersection.
 
-The features remain separate objects. Moving or changing one does not update the other or the spot elevation. Rev 0 has no automatic endpoint snap, join, trim, extend, or intersection tool. For a path you want to move as one object, draw all its segments as one polyline from the start.
+The features remain separate objects. Moving or changing one does not update the other or the spot elevation. Intersection snaps locate a crossing; they do not split existing geometry. Join, trim, and extend operations are future editing tools. For a path you want to move as one object, draw all its segments as one polyline from the start.
 
 ## 8. Draw contours
 
@@ -284,6 +300,8 @@ Tool shortcuts work when you are not typing in an input field. Use **Command** o
 | `A`                        | Switch the active Polyline, Contour, or polygon Boundary to Arc mode                           |
 | `S`                        | Switch the active path to Line mode                                                            |
 | Hold `Space` and drag      | Temporarily pan                                                                                |
+| Hold `Alt/Option`          | Temporarily bypass object snaps; the grid setting still applies                                |
+| `Tab` / `Shift + Tab`      | Cycle nearby snap targets while a target is active outside an input field                      |
 | `Enter`                    | Finish a polyline, contour, or polygon boundary; in a numeric field, commit that field instead |
 | `Esc`                      | Cancel an unfinished drawing and clear the selection                                           |
 | `Delete` / `Backspace`     | Delete the selected feature when outside an input field                                        |
@@ -301,7 +319,7 @@ The desktop application's **File** menu also offers `Command/Ctrl + N` for a new
 | A shortcut types into a box instead of switching tools                  | Commit the field with Enter, then click the tool you want                                                                            |
 | I cannot find the drawing                                               | Click Fit drawing; pan/zoom changes the view without moving your geometry                                                            |
 | A number I typed did not apply                                          | Press Enter or move focus out of the field; invalid values revert to the previous value                                              |
-| I can draw only on whole-foot positions                                 | Reduce Grid spacing, turn Grid snap off, or edit exact vertex coordinates afterward                                                  |
+| I can draw only on whole-foot positions                                 | Use Precise placement for exact coordinates, reduce Grid spacing, or turn Grid snap off                                              |
 | Two lines look connected but have different heights                     | Compare both endpoint Z values as well as X/Y in Vertex coordinates                                                                  |
 | Moving one connected-looking feature leaves a gap                       | Shared coordinates are not a live connection; update the other feature's endpoint too                                                |
 | Changing Drawing elevation did not change an existing line              | Select that feature and edit Elevation or its vertex Z values                                                                        |

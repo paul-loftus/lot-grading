@@ -62,6 +62,10 @@ Export contract 2 adds LWPOLYLINE group 42 bulges at common group 38 elevation w
 
 ## Browser and desktop behavior
 
+Object snapping and exact placement share the same canvas placement state machine. `src/core/snapping.ts` computes targets in source coordinates; the canvas converts the 12-pixel acquisition radius to world units at the current zoom. Targets include endpoints, points, true arc midpoints/centers, and bounded finite line/arc intersections. Queries consider at most 128 nearby intersection segments and expose up to 24 nearest targets for cycling. A point on different-height crossing features has no unambiguous source Z; explicit elevation acquisition must reject it. Default XY snapping preserves Drawing elevation.
+
+`PrecisionEntry` supplies exact world points or points calculated from a decimal survey bearing and horizontal distance. Exact entry bypasses both grid and object snapping. Curves/contours retain their constant-Z constraints. These controls are session preferences and do not change project schemas, the DXF contract, or existing source geometry. Perpendicular/tangent/tracking snaps and snapping during feature movement remain future work.
+
 ```sh
 npx playwright install chromium
 npm run test:e2e

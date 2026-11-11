@@ -885,6 +885,51 @@
   color: #97562f;
   border-color: #d5b69a;
 }
+.canvas-snap-feedback {
+  position: absolute;
+  left: 24px;
+  bottom: 75px;
+  max-width: min(440px, calc(100% - 48px));
+  padding: 9px 13px;
+  border: 1px solid #8ab6a7;
+  border-radius: 5px;
+  background: #f9fff9f5;
+  color: #27685d;
+  font-size: 11px;
+  line-height: 1.6;
+  pointer-events: none;
+}
+.canvas-snap-feedback span {
+  display: block;
+  font-size: 10px;
+}
+.precision-entry input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 34px;
+  padding: 6px 8px;
+  background: #fbfcf5;
+  color: #557046;
+  border: 1px solid #dce4d3;
+  border-radius: 4px;
+}
+.precision-place {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid #799a74;
+  border-radius: 4px;
+  color: #345e46;
+  background: #eaf2e4;
+  font-size: 11px;
+}
+.snap-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: #58744e;
+}
 .curve-edit-error {
   padding: 10px;
   border: 1px solid #d5b69a;

@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from 'react';
 import type { DrawingEntity, Point, Project } from '../core/types';
 import { LAYERS } from '../core/types';
@@ -9,6 +9,8 @@ import {
   entitySvgPath,
   validateEntityCurves,
 } from '../core/geometry';
+import { buildSnapIndex, findSnapTargets, snapPlacement } from '../core/snapping';
+import type { SnapTarget } from '../core/snapping';
 
 export type DrawingTool =
   'select' | 'pan' | 'polyline' | 'contour' | 'boundary' | 'boundary-rect' | 'building' | 'point';
@@ -17,12 +19,18 @@ export interface CanvasHandle {
   finish: () => void;
   cancel: () => void;
   fit: () => void;
+  place: (point: Point) => void;
 }
 interface DrawingCanvasProps {
   project: Project;
   tool: DrawingTool;
   segmentMode: SegmentMode;
   elevation: number;
+  objectSnaps: boolean;
+  matchSnapElevation: boolean;
+  intersectionSnaps: boolean;
+  onElevationChange: (elevation: number) => void;
+  onAnchorChange: (point: Point | null) => void;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onCreate: (entity: DrawingEntity) => void;
@@ -46,6 +54,11 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     tool,
     segmentMode,
     elevation,
+    objectSnaps,
+    matchSnapElevation,
+    intersectionSnaps,
+    onElevationChange,
+    onAnchorChange,
     selectedId,
     onSelect,
     onCreate,
@@ -63,6 +76,10 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   const [arcThrough, setArcThrough] = useState<Point | null>(null);
   const [drawingError, setDrawingError] = useState<string | null>(null);
   const [hover, setHover] = useState<Point | null>(null);
+  const [snapTargets, setSnapTargets] = useState<SnapTarget[]>([]);
+  const [snapChoice, setSnapChoice] = useState(0);
+  const [suspendSnaps, setSuspendSnaps] = useState(false);
+  const activeSnap = objectSnaps && !suspendSnaps ? snapTargets[snapChoice] : undefined;
   const [spaceDown, setSpaceDown] = useState(false);
   const [drag, setDrag] = useState<{
     kind: 'pan' | 'entity';
@@ -79,6 +96,29 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   const latestViewChange = useRef(onViewChange);
   latestViewChange.current = onViewChange;
   const view = transientView ?? project.view;
+  const placementAnchor = arcThrough ?? draft.at(-1) ?? null;
+  useEffect(() => onAnchorChange(placementAnchor), [placementAnchor, project.id]);
+  const snapIndex = useMemo(
+    () =>
+      buildSnapIndex([
+        ...project.entities,
+        ...(draft.length
+          ? [
+              {
+                id: 'current-draft',
+                kind: 'polyline' as const,
+                name: 'Current path',
+                layer: '0',
+                points:
+                  tool === 'contour' ? draft.map((point) => ({ ...point, z: elevation })) : draft,
+                bulges: draftBulges,
+                closed: false,
+              },
+            ]
+          : []),
+      ]),
+    [project.entities, draft, draftBulges, tool, elevation],
+  );
   const screen = (p: Pick<Point, 'x' | 'y'>) => ({
     x: (p.x - view.centerX) * view.scale + size.width / 2,
     y: size.height / 2 - (p.y - view.centerY) * view.scale,
@@ -100,6 +140,8 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     setArcThrough(null);
     setDrawingError(null);
     setHover(null);
+    setSnapTargets([]);
+    setSnapChoice(0);
     onDraftChange(0);
   };
   const create = (
@@ -180,7 +222,17 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
       scale: Math.max(0.05, Math.min(1000, scale)),
     });
   };
-  useImperativeHandle(ref, () => ({ finish, cancel: clearDraft, fit }));
+  useImperativeHandle(ref, () => ({
+    finish,
+    cancel: clearDraft,
+    fit,
+    place: (point) => {
+      setSnapTargets([]);
+      setHover(point);
+      onCursorChange(point);
+      placePoint(point, true);
+    },
+  }));
   useEffect(() => {
     if (!host.current) return;
     const observer = new ResizeObserver((entries) => {
@@ -210,11 +262,29 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   }, [project.id]);
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).closest('input, textarea, select, [contenteditable]'))
+      if (event.key === 'Alt') {
+        setSuspendSnaps(true);
+        setSnapTargets([]);
+      }
+      if ((event.target as HTMLElement).closest('input, textarea, select, form, [contenteditable]'))
         return;
       if (event.code === 'Space') {
         event.preventDefault();
         setSpaceDown(true);
+      }
+      if (event.key === 'Tab' && activeSnap && snapTargets.length > 1) {
+        event.preventDefault();
+        const index =
+          (snapChoice + (event.shiftKey ? snapTargets.length - 1 : 1)) % snapTargets.length;
+        setSnapChoice(index);
+        const target = snapTargets[index];
+        const point = {
+          x: target.x,
+          y: target.y,
+          z: matchSnapElevation && target.z !== null ? target.z : elevation,
+        };
+        setHover(point);
+        onCursorChange(point);
       }
       if (event.key === 'Escape') clearDraft();
       if (event.key === 'Enter') {
@@ -224,9 +294,12 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     };
     const up = (event: KeyboardEvent) => {
       if (event.code === 'Space') setSpaceDown(false);
+      if (event.key === 'Alt') setSuspendSnaps(false);
     };
     const blur = () => {
       setSpaceDown(false);
+      setSuspendSnaps(false);
+      setSnapTargets([]);
       if (drag?.kind === 'pan' && transientView) onViewChange(transientView);
       setTransientView(null);
       setDrag(null);
@@ -249,9 +322,45 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
       return;
     }
     if (event.button !== 0) return;
-    const point = world(event.clientX, event.clientY);
+    event.currentTarget.focus({ preventScroll: true });
     if (tool === 'select') {
       onSelect(null);
+      return;
+    }
+    const raw = world(event.clientX, event.clientY, false);
+    const targets =
+      objectSnaps && !event.altKey
+        ? findSnapTargets(snapIndex, raw, 12 / view.scale, intersectionSnaps)
+        : [];
+    const target = targets.find((candidate) => candidate.key === activeSnap?.key) ?? targets[0];
+    try {
+      const point = target
+        ? snapPlacement(target, elevation, matchSnapElevation)
+        : world(event.clientX, event.clientY);
+      placePoint(point, Boolean(target), Boolean(target) && matchSnapElevation);
+    } catch (error) {
+      setDrawingError(error instanceof Error ? error.message : 'This snap could not be used.');
+    }
+  };
+  const placePoint = (point: Point, exact = false, acquiredElevation = false) => {
+    if (['select', 'pan'].includes(tool)) return;
+    if (Object.values(point).some((value) => !Number.isFinite(value) || Math.abs(value) > 1e12)) {
+      setDrawingError('The point is outside the supported coordinate range.');
+      return;
+    }
+    if (
+      acquiredElevation &&
+      draft.length === 0 &&
+      (tool === 'contour' ||
+        tool === 'building' ||
+        tool === 'boundary-rect' ||
+        (segmentMode === 'arc' && (tool === 'polyline' || tool === 'boundary')))
+    )
+      onElevationChange(point.z);
+    if (tool === 'contour' && acquiredElevation && draft.length && point.z !== elevation) {
+      setDrawingError(
+        'This contour has one elevation. Turn off Match target elevation to snap XY only.',
+      );
       return;
     }
     if (tool === 'point') {
@@ -264,6 +373,12 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
         onDraftChange(1);
       } else {
         const first = draft[0];
+        if (acquiredElevation && point.z !== first.z) {
+          setDrawingError(
+            'This rectangle uses one drawing elevation. Turn off Match target elevation to snap XY only.',
+          );
+          return;
+        }
         if (Math.abs(first.x - point.x) < 1e-9 || Math.abs(first.y - point.y) < 1e-9) return;
         create(
           [
@@ -299,7 +414,9 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
           return;
         }
         const closing =
-          tool === 'boundary' && draft.length >= 3 && distance(draft[0], point) * view.scale < 12;
+          tool === 'boundary' &&
+          draft.length >= 3 &&
+          distance(draft[0], point) < (exact ? 1e-9 : 12 / view.scale);
         const end = closing ? draft[0] : point;
         const bulge = bulgeThroughPoint(draft.at(-1)!, arcThrough, end);
         if (bulge === null || bulge === 0) {
@@ -322,7 +439,11 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
         return;
       }
     }
-    if (tool === 'boundary' && draft.length >= 3 && distance(draft[0], point) * view.scale < 12) {
+    if (
+      tool === 'boundary' &&
+      draft.length >= 3 &&
+      distance(draft[0], point) < (exact ? 1e-9 : 12 / view.scale)
+    ) {
       finish();
       return;
     }
@@ -332,7 +453,21 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     onDraftChange(draft.length + 1);
   };
   const pointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
-    const point = world(event.clientX, event.clientY);
+    const raw = world(event.clientX, event.clientY, false);
+    const targets =
+      objectSnaps && !event.altKey && !spaceDown && !drag && !['select', 'pan'].includes(tool)
+        ? findSnapTargets(snapIndex, raw, 12 / view.scale, intersectionSnaps)
+        : [];
+    setSnapTargets(targets);
+    setSnapChoice(0);
+    const target = targets[0];
+    const point = target
+      ? {
+          x: target.x,
+          y: target.y,
+          z: matchSnapElevation && target.z !== null ? target.z : elevation,
+        }
+      : world(event.clientX, event.clientY);
     setHover(point);
     onCursorChange(point);
     if (drag?.kind === 'pan') {
@@ -450,6 +585,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
         height="100%"
         aria-label="Plan drawing canvas"
         role="application"
+        tabIndex={0}
         className={`canvas-svg tool-${tool} ${spaceDown || drag?.kind === 'pan' ? 'is-panning' : ''}`}
         onPointerDown={pointerDown}
         onPointerMove={pointerMove}
@@ -462,6 +598,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
           if (!drag) {
             onCursorChange(null);
             setHover(null);
+            setSnapTargets([]);
           }
         }}
         onWheel={wheel}
@@ -662,6 +799,32 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
             />
           </g>
         )}
+        {activeSnap && !drag && (
+          <g
+            pointerEvents="none"
+            data-testid="snap-marker"
+            stroke="#197b70"
+            fill="#fffef4"
+            strokeWidth="2"
+          >
+            {activeSnap.kind === 'midpoint' ? (
+              <path d={`M ${screen(activeSnap).x} ${screen(activeSnap).y - 8} l 8 14 h -16 Z`} />
+            ) : activeSnap.kind === 'center' || activeSnap.kind === 'point' ? (
+              <circle cx={screen(activeSnap).x} cy={screen(activeSnap).y} r="7" />
+            ) : activeSnap.kind === 'intersection' ? (
+              <path
+                d={`M ${screen(activeSnap).x - 7} ${screen(activeSnap).y - 7} l 14 14 m 0 -14 l -14 14`}
+              />
+            ) : (
+              <rect
+                x={screen(activeSnap).x - 6}
+                y={screen(activeSnap).y - 6}
+                width="12"
+                height="12"
+              />
+            )}
+          </g>
+        )}
         <g
           transform={`translate(28 ${size.height - 30})`}
           className="canvas-scale"
@@ -685,6 +848,25 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
           <line y1="7" y2="28" stroke="#526a59" strokeWidth="1" />
         </g>
       </svg>
+      {activeSnap && (
+        <div className="canvas-snap-feedback" data-testid="snap-feedback" role="status">
+          <strong>
+            {activeSnap.kind === 'center'
+              ? 'Arc center'
+              : activeSnap.kind[0].toUpperCase() + activeSnap.kind.slice(1)}
+          </strong>{' '}
+          · {activeSnap.source}
+          <span>
+            {activeSnap.z === null ? 'Different source elevations' : `Source Z ${activeSnap.z}`} ·{' '}
+            {matchSnapElevation ? 'Match XYZ' : 'XY only'}
+          </span>
+          {snapTargets.length > 1 && (
+            <span>
+              Tab cycles {snapChoice + 1}/{snapTargets.length}
+            </span>
+          )}
+        </div>
+      )}
       {(drawingError ||
         (segmentMode === 'arc' && ['polyline', 'contour', 'boundary'].includes(tool))) && (
         <div

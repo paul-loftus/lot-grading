@@ -45,3 +45,11 @@ Open the **[Test 2 project](Test%202.lotgrade)** in LotGrade, inspect its **[pre
 This illustrative layout was drawn through LotGrade's desktop tools. It includes a house, attached garage, entry porch, rear patio, driveway, walk, street linework, spot elevations, and five contours from 103 to 105 feet in half-foot increments. The current project has 21 drawing objects; the full [original 22-object snapshot](Test%202%20-%20original/Test%202.lotgrade) and its DXF/preview are preserved in `Test 2 - original/` from before one interior wall line was removed.
 
 Both project/DXF pairs were checked for matching geometry, elevations, layers, units, and a clean independent-reader audit. Like the Willow Creek example, Test 2 uses international feet and illustrative local coordinates. Its contours are manually drawn; this is not an engineered grading design or a record of completed Civil 3D receiving validation.
+
+## Test 3 · Precision Showcase
+
+Open the **[Test 3 project](Test%203%20-%20Precision%20Showcase/Test-3-Precision-Showcase.lotgrade)**, inspect its **[overview](Test%203%20-%20Precision%20Showcase/overview.png)**, or read the **[drawing guide](Test%203%20-%20Precision%20Showcase/README.md)**. The matching **[DXF](Test%203%20-%20Precision%20Showcase/Test-3-Precision-Showcase.dxf)** is included for CAD inspection.
+
+This native-interface demonstration contains 47 features and 37 true circular arc segments: a curved corner lot, house and garage, porch, deck, semicircular patio, driveway, walks, drainage lines, trees, five contours, and 13 spot elevations. It exercises exact coordinate and bearing/distance entry, all object-snap types, target cycling, source-elevation matching, ambiguous-elevation rejection, and the Alt/Option override. The guide identifies each example and gives steps for trying the controls.
+
+The project uses international feet and illustrative local coordinates. Independent DXF checks cover the saved source geometry and analytic controls for all 37 arcs. Open it with the current source build; curve-bearing schema 2 projects require a newer build than Rev 0.

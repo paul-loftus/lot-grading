@@ -35,6 +35,7 @@ import { validateProject } from '../core/project';
 import { arcFromBulge, entityLength, entitySignedArea, hasCurves } from '../core/geometry';
 import { platform } from '../platform';
 import { DrawingCanvas } from './DrawingCanvas';
+import { PrecisionEntry } from './PrecisionEntry';
 import type { CanvasHandle, DrawingTool, SegmentMode } from './DrawingCanvas';
 import '../styles/workspace.css';
 
@@ -242,6 +243,10 @@ export function Workspace({
   const [elevation, setElevation] = useState(100);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [cursor, setCursor] = useState<Point | null>(null);
+  const [placementAnchor, setPlacementAnchor] = useState<Point | null>(null);
+  const [objectSnaps, setObjectSnaps] = useState(true);
+  const [matchSnapElevation, setMatchSnapElevation] = useState(false);
+  const [intersectionSnaps, setIntersectionSnaps] = useState(true);
   const [draftCount, setDraftCount] = useState(0);
   const [pendingArc, setPendingArc] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -514,6 +519,16 @@ export function Workspace({
         </div>
         <div className="toolbar-section toolbar-settings">
           <button
+            className={`snap-toggle ${objectSnaps ? 'active' : ''}`}
+            aria-pressed={objectSnaps}
+            aria-label="Object snaps"
+            onClick={() => setObjectSnaps(!objectSnaps)}
+            title="Snap to geometry; hold Alt/Option to temporarily bypass object snaps"
+          >
+            <Crosshair size={14} />
+            Object snap<span>{objectSnaps ? 'ON' : 'OFF'}</span>
+          </button>
+          <button
             className={`snap-toggle ${project.settings.snapToGrid ? 'active' : ''}`}
             aria-pressed={project.settings.snapToGrid}
             onClick={() => patchSettings({ snapToGrid: !project.settings.snapToGrid })}
@@ -592,6 +607,11 @@ export function Workspace({
             tool={tool}
             segmentMode={segmentMode}
             elevation={elevation}
+            objectSnaps={objectSnaps}
+            matchSnapElevation={matchSnapElevation}
+            intersectionSnaps={intersectionSnaps}
+            onElevationChange={setElevation}
+            onAnchorChange={setPlacementAnchor}
             selectedId={selectedId}
             onSelect={selectFeature}
             onCreate={(entity) => commit([...project.entities, entity])}
@@ -952,6 +972,39 @@ export function Workspace({
                         onCommit={setElevation}
                         testId="drawing-elevation"
                       />
+                      <PrecisionEntry
+                        anchor={placementAnchor}
+                        elevation={elevation}
+                        unit={unit}
+                        onPlace={(point) => canvas.current?.place(point)}
+                      />
+                      <details className="vertex-details snap-options">
+                        <summary>Object snap settings</summary>
+                        <div>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={matchSnapElevation}
+                              onChange={(event) => setMatchSnapElevation(event.target.checked)}
+                            />
+                            Match target elevation
+                          </label>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={intersectionSnaps}
+                              onChange={(event) => setIntersectionSnaps(event.target.checked)}
+                            />
+                            Intersection snaps
+                          </label>
+                          <p className="curve-note">
+                            Endpoints, survey points, midpoints, arc centers, and intersections. XY
+                            only by default. Match elevation explicitly to acquire source Z;
+                            contours and arcs must stay planar. Hold Alt/Option to bypass object
+                            snaps. Tab cycles nearby targets.
+                          </p>
+                        </div>
+                      </details>
                       {['polyline', 'contour', 'boundary'].includes(tool) && (
                         <div
                           className="shape-mode segment-mode"
