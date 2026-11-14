@@ -21,8 +21,8 @@ function fail(message: string): never {
 /** One validation boundary shared by disk, browser storage, and the renderer. */
 export function validateProject(value: unknown): Project {
   if (!isRecord(value)) fail('The project must be an object.');
-  if (value.schemaVersion !== 1 && value.schemaVersion !== 2)
-    fail('Unsupported project version. This version of LotGrade opens schema versions 1 and 2.');
+  if (![1, 2, 3].includes(value.schemaVersion as number))
+    fail('Unsupported project version. This version of LotGrade opens schema versions 1, 2 and 3.');
   if (!id(value.id)) fail('The project ID is invalid.');
   if (!text(value.name, 120) || !value.name.trim())
     fail('Give the project a name (up to 120 characters).');
@@ -37,9 +37,146 @@ export function validateProject(value: unknown): Project {
     fail('Project dates are invalid.');
   if (!Array.isArray(value.entities) || value.entities.length > 10000)
     fail('Projects support up to 10,000 drawing objects.');
+  if (
+    value.schemaVersion !== 3 &&
+    (value.references !== undefined || value.coordinateContext !== undefined)
+  )
+    fail('References and coordinate context require project schema version 3.');
+  const references = value.references ?? [];
+  if (!Array.isArray(references) || references.length > 20)
+    fail('Projects support up to 20 reference sources.');
+  if (
+    value.coordinateContext !== undefined &&
+    (!isRecord(value.coordinateContext) ||
+      !text(value.coordinateContext.horizontal, 500) ||
+      !text(value.coordinateContext.vertical, 500))
+  )
+    fail('Coordinate context labels are invalid.');
+  const sourceIds = new Set<string>();
+  for (const source of references) {
+    if (!isRecord(source) || !id(source.id) || sourceIds.has(source.id))
+      fail('Reference source IDs must be unique.');
+    sourceIds.add(source.id);
+    if (
+      !text(source.fileName, 255) ||
+      !source.fileName.trim() ||
+      /[\\/\u0000-\u001f\u007f]/.test(source.fileName)
+    )
+      fail('Reference sources store a file name, not a path.');
+    if (!['dxf', 'points'].includes(source.format as string) || source.units !== value.units)
+      fail(
+        'Reference units must match project units; convert the source explicitly before importing.',
+      );
+    if (
+      typeof source.contentBase64 !== 'string' ||
+      !source.contentBase64.length ||
+      source.contentBase64.length > 5592408 ||
+      source.contentBase64.length % 4 !== 0 ||
+      /[^A-Za-z0-9+/=]/.test(source.contentBase64) ||
+      source.contentBase64.slice(0, -2).includes('=') ||
+      (source.contentBase64.at(-2) === '=' && source.contentBase64.at(-1) !== '=') ||
+      (source.contentBase64.length / 4) * 3 -
+        (source.contentBase64.endsWith('==') ? 2 : source.contentBase64.endsWith('=') ? 1 : 0) >
+        4 * 1024 * 1024 ||
+      typeof source.sha256 !== 'string' ||
+      !/^[a-f0-9]{64}$/.test(String(source.sha256))
+    )
+      fail('The preserved reference source is invalid or exceeds 4 MB.');
+    if (
+      typeof source.importedAt !== 'string' ||
+      !Number.isFinite(Date.parse(source.importedAt)) ||
+      typeof source.visible !== 'boolean' ||
+      typeof source.includeInExport !== 'boolean'
+    )
+      fail('Reference settings are invalid.');
+    if (
+      !Array.isArray(source.entities) ||
+      !source.entities.length ||
+      !Array.isArray(source.records) ||
+      source.records.length !== source.entities.length
+    )
+      fail('Reference source objects and records do not match.');
+    if (
+      !Array.isArray(source.issues) ||
+      source.issues.length > 10000 ||
+      source.issues.some(
+        (issue) =>
+          !isRecord(issue) ||
+          !text(issue.record, 200) ||
+          !text(issue.type, 100) ||
+          !text(issue.message, 1000),
+      )
+    )
+      fail('Reference import report is invalid.');
+    const recordIds = new Set<string>();
+    const entityIds = new Set(source.entities.map((entity: DrawingEntity) => entity?.id));
+    for (const record of source.records) {
+      if (
+        !isRecord(record) ||
+        !id(record.entityId) ||
+        recordIds.has(record.entityId) ||
+        !entityIds.has(record.entityId) ||
+        !text(record.record, 200) ||
+        (record.pointNumber !== undefined && !text(record.pointNumber, 200)) ||
+        (record.description !== undefined && !text(record.description, 2000))
+      )
+        fail('Reference source record is invalid.');
+      recordIds.add(record.entityId);
+    }
+    if (source.format === 'points' && source.pointFormat === undefined)
+      fail('Survey references must preserve their column mapping.');
+    if (source.pointFormat !== undefined) {
+      const f = source.pointFormat;
+      if (
+        !isRecord(f) ||
+        ![',', ';', '\t', 'space'].includes(f.delimiter as string) ||
+        typeof f.header !== 'boolean' ||
+        !isRecord(f.columns)
+      )
+        fail('Survey column mapping is invalid.');
+      const mapped: number[] = [];
+      for (const key of ['x', 'y', 'z', 'pointNumber', 'description']) {
+        const column = f.columns[key];
+        if (column === null && ['pointNumber', 'description'].includes(key)) continue;
+        if (
+          typeof column !== 'number' ||
+          !Number.isInteger(column) ||
+          column < 0 ||
+          column > 99 ||
+          mapped.includes(column)
+        )
+          fail('Survey columns must be distinct valid indices.');
+        mapped.push(column);
+      }
+    }
+    const a = source.alignment;
+    if (!isRecord(a) || a.confirmed !== true || !id(a.objectId) || !Number.isInteger(a.vertex))
+      fail('Confirm the reference alignment before saving.');
+    const control = source.entities.find((entity: DrawingEntity) => entity?.id === a.objectId);
+    if (
+      !control ||
+      !Array.isArray(control.points) ||
+      (a.vertex as number) < 0 ||
+      (a.vertex as number) >= control.points.length
+    )
+      fail('Reference alignment control is invalid.');
+    if (
+      a.expected !== undefined &&
+      (!isRecord(a.expected) ||
+        !['x', 'y', 'z'].every(
+          (axis) =>
+            finite(a.expected && (a.expected as Record<string, unknown>)[axis]) &&
+            Math.abs((a.expected as Record<string, number>)[axis]) <= 1e12,
+        ))
+    )
+      fail('Expected reference coordinates are invalid.');
+  }
+  const allEntities = [...value.entities, ...references.flatMap((source) => source.entities)];
+  if (allEntities.length > 10000)
+    fail('Projects support up to 10,000 objects including references.');
   let pointCount = 0;
   const seen = new Set<string>();
-  for (const entity of value.entities) {
+  for (const entity of allEntities) {
     if (!isRecord(entity) || !id(entity.id) || seen.has(entity.id))
       fail('Drawing object IDs must be valid and unique.');
     seen.add(entity.id);
@@ -108,7 +245,10 @@ export function validateProject(value: unknown): Project {
 }
 
 export function serializeProject(project: Project): string {
-  return JSON.stringify(validateProject(project), null, 2) + '\n';
+  const contents = JSON.stringify(validateProject(project), null, 2) + '\n';
+  if (new TextEncoder().encode(contents).length > MAX_PROJECT_BYTES)
+    fail('This project exceeds the 20 MB project-file limit.');
+  return contents;
 }
 export function parseProject(contents: string): Project {
   if (new TextEncoder().encode(contents).length > MAX_PROJECT_BYTES)

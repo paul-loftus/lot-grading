@@ -34,6 +34,8 @@ Arbitrary splines and automatic smoothing are outside this implementation. The [
 
 ## Receiving checklist
 
+Projects containing imported references use schema 3. References are excluded from DXF by default; choose each source's **Include reference in DXF export** setting under **Features** to deliver its supported geometry. Display visibility is independent of export inclusion. Unsupported source records remain in the import report and original attachment; selecting a source does not make those unsupported records exportable. Review the [import guide](IMPORT.md) and compare known controls before handoff. Coordinate-context labels do not transform data, and no terrain surface is created by importing points.
+
 1. In Civil 3D 2025 run `ABOUT` and record the exact update/build. Export DXF from LotGrade and record its project units and coordinate/benchmark context.
 2. Use **Open** in Civil 3D 2025 to open the DXF directly. Use **Zoom Extents** if the lot is outside the initial view. The ready-made [Willow Creek sample](../examples/README.md) supplies a matching project/DXF and known controls for this test.
 3. Inspect **Drawing Utilities → Units** / `INSUNITS` and compare several known XYZ control points using Properties or `LIST`. Confirm that the receiving drawing's units and reference frame match before inserting/copying geometry elsewhere.

@@ -26,6 +26,7 @@ For step-by-step drawing instructions, follow the **[LotGrade tutorial](docs/tut
 - Curves: mix straight and exact three-point circular arc segments in polylines, contours, and polygon boundaries; edit segment radius/direction and retain true curves in DXF.
 - Editing: selection, moving features, numeric elevation/vertex editing, custom DXF layers, undo/redo, grid snapping, pan, zoom, and fit drawing.
 - Precision placement: endpoint/point/midpoint/arc-center/intersection snaps with visible targets, optional source-elevation acquisition, and exact coordinate or survey-bearing/distance entry during drawing.
+- [Survey/reference import](docs/IMPORT.md): preview a documented DXF subset or mapped CSV/text points, confirm units/alignment, retain original sources, and snap to locked references with explicit DXF inclusion.
 - Local saving, portable `.lotgrade` save/open, and elevation-preserving **DXF R2013 export** for every available drawing tool.
 - Explicit meters, international feet, and US survey feet; exported coordinates remain in project units with no origin shift or Z flattening.
 
@@ -34,6 +35,8 @@ Explore the included example from the project dashboard. It is illustrative line
 Curved features use one elevation for the whole path. Varying-elevation straight polylines remain supported. Arbitrary splines, automatic contour smoothing, and tangent constraints are later features; existing drawings are not automatically converted to curves.
 
 Curve-bearing `.lotgrade` files use project schema 2 and require this curve-capable application. Legacy schema 1 drawings still open. The original `rev-0` tag and its older bundles reject schema 2 instead of silently replacing curves with straight segments.
+
+Projects with imported sources use schema 3 to preserve locked references and original files. The current build reads schemas 1–3; older builds reject schema 3. See the [import guide and samples](docs/IMPORT.md).
 
 The matching [sample project and DXF](examples/README.md) include known coordinates and elevations for a real Civil 3D receiving check.
 

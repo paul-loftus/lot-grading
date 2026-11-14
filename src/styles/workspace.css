@@ -881,6 +881,126 @@
   pointer-events: none;
 }
 .canvas-curve-hint.has-error,
+.modal.reference-import {
+  width: 900px;
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  box-sizing: border-box;
+}
+.reference-import fieldset {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #d5ded0;
+  border-radius: 6px;
+  min-width: 0;
+}
+.reference-import legend {
+  color: #41614d;
+  font-size: 13px;
+  padding: 0 6px;
+}
+.import-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mapping-grid {
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+}
+.reference-import .import-check,
+.reference-panel label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  line-height: 1.5;
+}
+.reference-import .import-check input,
+.reference-panel input {
+  width: auto;
+  margin: 2px 0 0;
+  flex-shrink: 0;
+}
+.reference-import .import-error {
+  color: #a94e33;
+}
+.source-fingerprint,
+.reference-card code {
+  overflow-wrap: anywhere;
+}
+.reference-import details,
+.reference-panel details {
+  margin: 14px 0;
+  font-size: 12px;
+  color: #536c60;
+}
+.reference-import summary,
+.reference-panel summary {
+  cursor: pointer;
+}
+.reference-import ul,
+.reference-panel ul {
+  padding-left: 18px;
+  line-height: 1.65;
+}
+.import-table {
+  overflow: auto;
+  max-height: 260px;
+  margin: 12px 0;
+}
+.import-table table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 11px;
+  text-align: left;
+}
+.import-table td,
+.import-table th {
+  padding: 7px;
+  border-bottom: 1px solid #dce3d9;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.import-plan {
+  display: block;
+  width: 100%;
+  height: 210px;
+  background: #f1f4ed;
+  border: 1px solid #d5ded0;
+}
+.reference-panel {
+  padding: 15px 18px;
+  border-bottom: 1px solid #dce3d9;
+}
+.reference-panel h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #476452;
+}
+.reference-panel p,
+.reference-panel label {
+  font-size: 11px;
+  color: #657d6e;
+  line-height: 1.7;
+}
+.reference-card {
+  padding: 10px;
+  border: 1px solid #dce3d9;
+  border-radius: 4px;
+}
+.reference-buttons {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.reference-buttons .workspace-btn {
+  padding: 8px;
+  font-size: 10px;
+}
+.workspace-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .curve-edit-error {
   color: #97562f;
   border-color: #d5b69a;

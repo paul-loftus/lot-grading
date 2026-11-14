@@ -15,7 +15,7 @@
     "setup:hooks": "node scripts/install-hooks.mjs",
     "test": "node --import tsx --test tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
-    "test:interop": "node --import tsx scripts/generate-export-fixtures.ts && node scripts/run-interop.mjs",
+    "test:interop": "node --import tsx scripts/generate-export-fixtures.ts && node --import tsx scripts/generate-import-fixture.ts && node scripts/run-interop.mjs",
     "test:e2e": "playwright test",
     "package": "npm run check && npm run test:interop && node scripts/package.mjs"
   },

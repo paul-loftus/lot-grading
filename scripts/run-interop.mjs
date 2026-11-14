@@ -4,8 +4,12 @@ const localPython = process.platform === 'win32' ? '.venv/Scripts/python.exe' : 
 const python =
   process.env.PYTHON ??
   (existsSync(localPython) ? localPython : process.platform === 'win32' ? 'python' : 'python3');
-for (const args of [[], ['--example']]) {
-  const result = spawnSync(python, ['scripts/verify-dxf.py', ...args], { stdio: 'inherit' });
+for (const args of [
+  ['scripts/verify-dxf.py'],
+  ['scripts/verify-dxf.py', '--example'],
+  ['scripts/verify-import.py'],
+]) {
+  const result = spawnSync(python, args, { stdio: 'inherit' });
   if (result.error) console.error(result.error.message);
   if (result.status !== 0) process.exit(result.status ?? 1);
 }

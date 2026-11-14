@@ -18,7 +18,7 @@ export interface DrawingEntity {
   layer: string;
 }
 export interface Project {
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   id: string;
   name: string;
   description: string;
@@ -28,6 +28,42 @@ export interface Project {
   entities: DrawingEntity[];
   view: { centerX: number; centerY: number; scale: number };
   settings: { gridSize: number; snapToGrid: boolean; contourInterval: number };
+  /** Schema 3 keeps locked source geometry separate from proposed drawing objects. */
+  references?: ReferenceSource[];
+  /** Empty labels mean unknown; labels never transform coordinates. */
+  coordinateContext?: { horizontal: string; vertical: string };
+}
+
+export interface ImportIssue {
+  record: string;
+  type: string;
+  message: string;
+}
+export interface ReferenceSource {
+  id: string;
+  fileName: string;
+  format: 'dxf' | 'points';
+  contentBase64: string;
+  sha256: string;
+  units: Units;
+  importedAt: string;
+  visible: boolean;
+  includeInExport: boolean;
+  entities: DrawingEntity[];
+  records: { entityId: string; record: string; pointNumber?: string; description?: string }[];
+  issues: ImportIssue[];
+  pointFormat?: {
+    delimiter: ',' | ';' | '\t' | 'space';
+    header: boolean;
+    columns: {
+      x: number;
+      y: number;
+      z: number;
+      pointNumber: number | null;
+      description: number | null;
+    };
+  };
+  alignment: { objectId: string; vertex: number; expected?: Point; confirmed: true };
 }
 
 export const UNIT_LABELS: Record<Units, string> = {

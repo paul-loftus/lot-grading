@@ -136,7 +136,7 @@ test('project imports reject scalar, null, and array roots rather than treating 
 });
 
 test('unknown or missing schema versions and unsupported entity kinds are rejected, never discarded', () => {
-  for (const schemaVersion of [undefined, 0, 3, '1']) {
+  for (const schemaVersion of [undefined, 0, 4, '1']) {
     assert.throws(
       () => validateProject({ ...fixture(), schemaVersion }),
       /unsupported project version/i,

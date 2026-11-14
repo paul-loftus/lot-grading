@@ -36,6 +36,8 @@ import { arcFromBulge, entityLength, entitySignedArea, hasCurves } from '../core
 import { platform } from '../platform';
 import { DrawingCanvas } from './DrawingCanvas';
 import { PrecisionEntry } from './PrecisionEntry';
+import { ImportReferenceDialog } from './ImportReferenceDialog';
+import { ReferencePanel } from './ReferencePanel';
 import type { CanvasHandle, DrawingTool, SegmentMode } from './DrawingCanvas';
 import '../styles/workspace.css';
 
@@ -105,6 +107,17 @@ const KIND_NAMES = {
   point: 'Spot elevation',
 };
 const cloneEntities = (entities: DrawingEntity[]) => structuredClone(entities);
+type EditState = Pick<
+  Project,
+  'entities' | 'references' | 'coordinateContext' | 'schemaVersion'
+> & { view?: Project['view'] };
+const editState = (project: Project, includeView = false): EditState => ({
+  entities: cloneEntities(project.entities),
+  references: project.references,
+  coordinateContext: project.coordinateContext,
+  schemaVersion: project.schemaVersion,
+  ...(includeView ? { view: project.view } : {}),
+});
 
 function NumericField({
   value,
@@ -252,8 +265,9 @@ export function Workspace({
   const [editError, setEditError] = useState<string | null>(null);
   const [tab, setTab] = useState<'properties' | 'features'>('properties');
   const [menu, setMenu] = useState(false);
+  const [referenceImport, setReferenceImport] = useState(false);
   const [historyVersion, setHistoryVersion] = useState(0);
-  const history = useRef<{ past: DrawingEntity[][]; future: DrawingEntity[][] }>({
+  const history = useRef<{ past: EditState[]; future: EditState[] }>({
     past: [],
     future: [],
   });
@@ -268,26 +282,36 @@ export function Workspace({
     setHistoryVersion((value) => value + 1);
   }, [project.id]);
   useEffect(() => setEditError(null), [selectedId, project.id]);
-  const commit = (entities: DrawingEntity[]) => {
+  const commitProject = (candidate: Project) => {
     let next: Project;
     try {
       next = validateProject({
-        ...project,
-        schemaVersion: project.schemaVersion === 2 || entities.some(hasCurves) ? 2 : 1,
-        entities,
+        ...candidate,
         updatedAt: new Date().toISOString(),
       });
     } catch (error) {
       setEditError(error instanceof Error ? error.message : 'This geometry could not be saved.');
-      return;
+      return false;
     }
-    history.current.past.push(cloneEntities(project.entities));
+    history.current.past.push(editState(project, candidate.view !== project.view));
     if (history.current.past.length > 100) history.current.past.shift();
     history.current.future = [];
     setHistoryVersion((value) => value + 1);
     setEditError(null);
     onChange(next);
+    return true;
   };
+  const commit = (entities: DrawingEntity[]) =>
+    commitProject({
+      ...project,
+      schemaVersion:
+        project.schemaVersion === 3
+          ? 3
+          : project.schemaVersion === 2 || entities.some(hasCurves)
+            ? 2
+            : 1,
+      entities,
+    });
   const updateSelected = (changes: Partial<DrawingEntity>) => {
     if (selected)
       commit(
@@ -322,22 +346,23 @@ export function Workspace({
   };
   const undo = () => {
     canvas.current?.cancel();
-    const entities = history.current.past.pop();
-    if (!entities) return;
-    history.current.future.push(cloneEntities(project.entities));
+    const state = history.current.past.pop();
+    if (!state) return;
+    history.current.future.push(editState(project, Boolean(state.view)));
     setHistoryVersion((value) => value + 1);
-    onChange({ ...project, entities, updatedAt: new Date().toISOString() });
+    onChange({ ...project, ...state, updatedAt: new Date().toISOString() });
   };
   const redo = () => {
     canvas.current?.cancel();
-    const entities = history.current.future.pop();
-    if (!entities) return;
-    history.current.past.push(cloneEntities(project.entities));
+    const state = history.current.future.pop();
+    if (!state) return;
+    history.current.past.push(editState(project, Boolean(state.view)));
     setHistoryVersion((value) => value + 1);
-    onChange({ ...project, entities, updatedAt: new Date().toISOString() });
+    onChange({ ...project, ...state, updatedAt: new Date().toISOString() });
   };
   useEffect(() =>
     platform.onMenuAction((action) => {
+      if (referenceImport) return;
       if (action !== 'undo' && action !== 'redo') return;
       if (document.activeElement?.matches('input, textarea, [contenteditable]')) {
         document.execCommand(action);
@@ -347,6 +372,7 @@ export function Workspace({
   );
   useEffect(() => {
     const keyDown = (event: KeyboardEvent) => {
+      if (referenceImport) return;
       const input = (event.target as HTMLElement).closest(
         'input, textarea, select, [contenteditable]',
       );
@@ -475,6 +501,17 @@ export function Workspace({
               </div>
             )}
           </div>
+          <button
+            className="workspace-btn"
+            onClick={() => {
+              canvas.current?.cancel();
+              setSelectedId(null);
+              setTool('select');
+              setReferenceImport(true);
+            }}
+          >
+            Import reference
+          </button>
           <button
             className="workspace-btn workspace-btn-primary"
             onClick={onExport}
@@ -675,7 +712,7 @@ export function Workspace({
               onClick={() =>
                 onChange({
                   ...project,
-                  view: { ...project.view, scale: Math.max(0.05, project.view.scale / 1.25) },
+                  view: { ...project.view, scale: Math.max(0.00001, project.view.scale / 1.25) },
                 })
               }
             >
@@ -704,6 +741,10 @@ export function Workspace({
           </div>
           {tab === 'features' ? (
             <div className="feature-list">
+              <ReferencePanel
+                project={project}
+                onChange={(references) => commitProject({ ...project, references })}
+              />
               <div className="inspector-section-heading">
                 <Layers size={14} />
                 <span>DRAWING FEATURES</span>
@@ -1152,6 +1193,18 @@ export function Workspace({
           <span className="coordinate-unit">{unit}</span>
         </div>
       </footer>
+      {referenceImport && (
+        <ImportReferenceDialog
+          project={project}
+          onClose={() => setReferenceImport(false)}
+          onApply={(next) => {
+            if (commitProject(next)) {
+              setReferenceImport(false);
+              setTab('features');
+            }
+          }}
+        />
+      )}
     </main>
   );
 }

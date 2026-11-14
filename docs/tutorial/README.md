@@ -12,6 +12,8 @@ The subsequent precision update adds **Object snap** and **Precise placement**. 
 
 ## Contents
 
+To start from an existing survey or DXF base plan, follow **[Survey and reference import](../IMPORT.md)**. The workspace's **Import reference** button previews data, confirms units/alignment, and attaches locked source geometry you can snap to. Rebuild the current source first; older bundles do not include this feature.
+
 - [1. Launch LotGrade](#1-launch-lotgrade)
 - [2. Create a practice project](#2-create-a-practice-project)
 - [3. Get comfortable with the workspace](#3-get-comfortable-with-the-workspace)

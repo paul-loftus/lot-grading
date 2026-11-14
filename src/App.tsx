@@ -20,6 +20,7 @@ import { createDemoProject, createProject, validateProject } from './core/projec
 import { UNIT_LABELS, type Project, type Units } from './core/types';
 import { entityBounds, entitySvgPath } from './core/geometry';
 import { isDesktop, platform } from './platform';
+import { visibleEntities } from './core/references';
 
 function relativeDate(value: string): string {
   const date = new Date(value);
@@ -37,7 +38,7 @@ function commitFocusedField(): void {
   }
 }
 function MiniPlan({ project }: { project?: Project }) {
-  const entities = project?.entities ?? [];
+  const entities = project ? visibleEntities(project) : [];
   const bounds = entities.reduce(
     (b, entity) => {
       const extent = entityBounds(entity);
@@ -55,10 +56,13 @@ function MiniPlan({ project }: { project?: Project }) {
   const width = entities.length ? bounds.maxX - minX : 100;
   const height = entities.length ? bounds.maxY - minY : 120;
   const margin = Math.max(width, height, 20) * 0.15;
+  // Subtract a display origin before SVG so survey-scale coordinates retain detail.
+  const left = entities.length ? minX : 0;
+  const top = entities.length ? minY + height : 0;
   return (
     <svg
       className="mini-plan"
-      viewBox={`${minX - margin} ${-minY - height - margin} ${width + 2 * margin || 20} ${height + 2 * margin || 20}`}
+      viewBox={`${minX - left - margin} ${top - minY - height - margin} ${width + 2 * margin || 20} ${height + 2 * margin || 20}`}
       aria-hidden="true"
     >
       <defs>
@@ -72,8 +76,8 @@ function MiniPlan({ project }: { project?: Project }) {
         </pattern>
       </defs>
       <rect
-        x={minX - margin}
-        y={-minY - height - margin}
+        x={minX - left - margin}
+        y={top - minY - height - margin}
         width={width + margin * 2}
         height={height + margin * 2}
         fill={`url(#grid-${project?.id ?? 'empty'})`}
@@ -82,15 +86,15 @@ function MiniPlan({ project }: { project?: Project }) {
         entity.kind === 'point' ? (
           <circle
             key={entity.id}
-            cx={entity.points[0].x}
-            cy={-entity.points[0].y}
-            r={Math.max(width, height) * 0.012}
+            cx={entity.points[0].x - left}
+            cy={top - entity.points[0].y}
+            r={Math.max(width, height, 10) * 0.012}
             fill="#4a7361"
           />
         ) : (
           <path
             key={entity.id}
-            d={entitySvgPath(entity, (point) => ({ x: point.x, y: -point.y }), 1)}
+            d={entitySvgPath(entity, (point) => ({ x: point.x - left, y: top - point.y }), 1)}
             fill={entity.kind === 'building' ? '#dce5d5' : 'none'}
             stroke={entity.kind === 'contour' ? '#8b9f80' : '#45654f'}
             strokeWidth={Math.max(width, height) * 0.006}

@@ -1,5 +1,7 @@
 import type { DrawingEntity, Point, Project } from './types';
 import { entityBounds, hasCurves, validateEntityCurves } from './geometry';
+import { validateProject } from './project';
+import { exportEntities } from './references';
 
 /**
  * Frozen public interchange contract: ASCII DXF R2013 (AC1027), world coordinates,
@@ -161,8 +163,14 @@ const serializers = {
 
 /** Export all supported objects from one project revision. Invalid input throws. */
 export function exportDxf(project: Project): string {
-  if (!project || ![1, 2].includes(project.schemaVersion) || !Array.isArray(project.entities))
+  if (!project || ![1, 2, 3].includes(project.schemaVersion) || !Array.isArray(project.entities))
     throw new Error('A supported project is required for DXF export.');
+  if (project.schemaVersion !== 3 && project.references !== undefined)
+    throw new Error('References require schema version 3 before export.');
+  if (project.schemaVersion === 3) {
+    project = validateProject(project);
+    project = { ...project, entities: exportEntities(project) };
+  }
   if (!Object.hasOwn(unitCodes, project.units))
     throw new Error('Select valid project units before exporting.');
   const ids = new Set<string>();

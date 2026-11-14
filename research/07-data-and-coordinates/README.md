@@ -4,20 +4,22 @@
 
 ## Coordinate contract
 
+**Implemented import scope, November 13, 2026:** schema 3 preserves source units/XYZ without conversion, locked source groups, original bytes/checksums, mappings/reports, and horizontal/vertical labels (unknown when blank). Source units must match the project. Labels never transform data. See the [import guide](../../docs/IMPORT.md) and [implementation decisions](../15-survey-reference-import/README.md); the broader conversion/terrain architecture below remains research.
+
 Use an explicitly defined projected or local engineering coordinate system. Store engineering values in **double precision**, with canonical computation in meters and an explicit conversion back to source/output units. Preserve original source metadata and checksums; never overwrite a source file during normalization.
 
 Keep these concepts separate:
 
-| Field | Purpose |
-| --- | --- |
-| Horizontal CRS | Projection, reference frame/datum, zone, axes, and units |
-| Vertical reference | Named vertical datum, ellipsoidal height, or documented local benchmark |
-| Horizontal / vertical units | Explicit independent unit factors, including mixed-unit inputs |
-| Coordinate epoch | Stored where applicable to the supplied reference system |
-| Grid-to-ground context | Whether coordinates/distances use a project ground adjustment or grid convention |
-| Local computational origin | Reversible translation for numerical/rendering convenience |
-| Display units and rounding | User presentation; independent of stored precision |
-| Output coordinate context | Exact export units, origin, axes, and any approved transformation |
+| Field                       | Purpose                                                                          |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| Horizontal CRS              | Projection, reference frame/datum, zone, axes, and units                         |
+| Vertical reference          | Named vertical datum, ellipsoidal height, or documented local benchmark          |
+| Horizontal / vertical units | Explicit independent unit factors, including mixed-unit inputs                   |
+| Coordinate epoch            | Stored where applicable to the supplied reference system                         |
+| Grid-to-ground context      | Whether coordinates/distances use a project ground adjustment or grid convention |
+| Local computational origin  | Reversible translation for numerical/rendering convenience                       |
+| Display units and rounding  | User presentation; independent of stored precision                               |
+| Output coordinate context   | Exact export units, origin, axes, and any approved transformation                |
 
 An EPSG identifier alone is not a complete description of a local site calibration or a vertical benchmark. Unknown metadata should remain explicitly unknown; do not invent a datum.
 

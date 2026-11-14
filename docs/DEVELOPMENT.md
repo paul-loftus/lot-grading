@@ -62,6 +62,12 @@ Export contract 2 adds LWPOLYLINE group 42 bulges at common group 38 elevation w
 
 ## Browser and desktop behavior
 
+Survey/reference import uses `src/core/import.ts` and a shared browser/Electron file input, with no additional Node integration or file-reading IPC. `docs/IMPORT.md` defines the accepted UTF-8 DXF/point subset and resource limits. References and coordinate labels require schema 3 so older readers reject them instead of dropping source information or bypassing locks. Legacy schemas remain readable.
+
+Reference groups contain source bytes as base64, SHA-256 identity, a plain file name, units, import/record information, column mappings, skipped records, and a confirmed alignment control. Their geometry stays separate from `project.entities`; only visible sources enter canvas rendering/snapping. `exportEntities` includes explicitly selected sources independently of visibility. Undo/redo snapshots cover references and context alongside proposed entities. Never silently transform coordinates or infer a single Z from different-height geometry.
+
+`npm run test:interop` now also generates an import/re-export fixture and invokes `scripts/verify-import.py`. That reader compares against the independently authored original DXF, rather than only comparing the importer with itself. The fixture's seven supported objects and four deliberately unsupported records must remain explicit. Original legacy export fixtures remain byte-identical.
+
 Object snapping and exact placement share the same canvas placement state machine. `src/core/snapping.ts` computes targets in source coordinates; the canvas converts the 12-pixel acquisition radius to world units at the current zoom. Targets include endpoints, points, true arc midpoints/centers, and bounded finite line/arc intersections. Queries consider at most 128 nearby intersection segments and expose up to 24 nearest targets for cycling. A point on different-height crossing features has no unambiguous source Z; explicit elevation acquisition must reject it. Default XY snapping preserves Drawing elevation.
 
 `PrecisionEntry` supplies exact world points or points calculated from a decimal survey bearing and horizontal distance. Exact entry bypasses both grid and object snapping. Curves/contours retain their constant-Z constraints. These controls are session preferences and do not change project schemas, the DXF contract, or existing source geometry. Perpendicular/tangent/tracking snaps and snapping during feature movement remain future work.

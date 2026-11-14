@@ -10,6 +10,8 @@ The planning documentation was committed and pushed as `16c76bc`. The subsequent
 
 ## Recommendation
 
+**November 13, 2026 update:** feature 2 now has a [documented DXF/point import workflow](../../docs/IMPORT.md): mapped CSV/text points, a DXF subset, preview/counts/skipped-record reporting, unit and known-coordinate checks, embedded original sources, and locked reference groups with independent visibility/export controls. Schema 3 preserves that data. Features 3–4 remain unstarted. See the [implementation decisions](../15-survey-reference-import/README.md).
+
 Prioritize a complete real-lot workflow: **bring in existing information → draw and connect precisely → check grades → save a clear project revision → hand it back to Civil 3D**. Then extend that workflow with design controls, terrain surfaces, and bounded grading assistance.
 
 The ranking combines observed gaps in the current code, the user's recent file-location question, the original grading objectives, and established CAD/grading interactions. Professional demand and time savings still need direct testing with practicing designers. The ordering is our product judgment; the linked vendor documentation supports specific workflow precedents rather than this exact ranking.
@@ -170,7 +172,7 @@ Use pilot evidence to choose the first template types. Townhouse rows require sh
 3. **Actual surface-based grading: priorities 8–10.** Build and inspect terrain, prove surface handoff, then add bounded grading operations and diagnostics.
 4. **Review and repeated production: priorities 11–12.** Add sections/quantities and reuse workflows validated on real lots.
 
-The recommended first implementation ticket was **endpoint/point snapping plus visible snap feedback and explicit XY-versus-Z behavior**. The implementation checkpoint above now records the first precision controls. The next unstarted feature is priority 2, survey/reference import; perpendicular/tangent/tracking snaps remain refinements to priority 1.
+The recommended first implementation ticket was **endpoint/point snapping plus visible snap feedback and explicit XY-versus-Z behavior**. The checkpoints above now record the precision controls and the first survey/reference import workflow. The next unstarted feature is priority 3, professional file handling/recovery; perpendicular/tangent/tracking snaps remain refinements to priority 1.
 
 ## Professional readiness alongside the feature work
 
@@ -182,4 +184,4 @@ Avoid calendar promises until the first scoped feature and pilot inputs are agre
 
 ## Scope of this update
 
-The original planning update created this document and linked it from the existing roadmap and research index without changing application behavior. The later implementation checkpoint above records feature 1 separately. The [current tutorial](../../docs/tutorial/README.md) remains the reference for implemented features.
+The original planning update created this document and linked it from the existing roadmap and research index without changing application behavior. The later checkpoints record features 1 and 2 separately. The [current tutorial](../../docs/tutorial/README.md) and [import guide](../../docs/IMPORT.md) describe implemented features.

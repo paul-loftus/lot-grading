@@ -11,6 +11,7 @@ import {
 } from '../core/geometry';
 import { buildSnapIndex, findSnapTargets, snapPlacement } from '../core/snapping';
 import type { SnapTarget } from '../core/snapping';
+import { visibleEntities } from '../core/references';
 
 export type DrawingTool =
   'select' | 'pan' | 'polyline' | 'contour' | 'boundary' | 'boundary-rect' | 'building' | 'point';
@@ -97,11 +98,19 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   latestViewChange.current = onViewChange;
   const view = transientView ?? project.view;
   const placementAnchor = arcThrough ?? draft.at(-1) ?? null;
+  const displayEntities = useMemo(
+    () => visibleEntities(project),
+    [project.entities, project.references],
+  );
+  const designIds = useMemo(
+    () => new Set(project.entities.map((entity) => entity.id)),
+    [project.entities],
+  );
   useEffect(() => onAnchorChange(placementAnchor), [placementAnchor, project.id]);
   const snapIndex = useMemo(
     () =>
       buildSnapIndex([
-        ...project.entities,
+        ...displayEntities,
         ...(draft.length
           ? [
               {
@@ -117,7 +126,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
             ]
           : []),
       ]),
-    [project.entities, draft, draftBulges, tool, elevation],
+    [displayEntities, draft, draftBulges, tool, elevation],
   );
   const screen = (p: Pick<Point, 'x' | 'y'>) => ({
     x: (p.x - view.centerX) * view.scale + size.width / 2,
@@ -195,7 +204,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     }
   };
   const fit = () => {
-    if (!project.entities.length) {
+    if (!displayEntities.length) {
       setTransientView(null);
       onViewChange({ centerX: 0, centerY: 0, scale: 8 });
       return;
@@ -204,7 +213,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
       maxX = -Infinity,
       minY = Infinity,
       maxY = -Infinity;
-    for (const entity of project.entities) {
+    for (const entity of displayEntities) {
       const bounds = entityBounds(entity);
       minX = Math.min(minX, bounds.minX);
       maxX = Math.max(maxX, bounds.maxX);
@@ -219,7 +228,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     onViewChange({
       centerX: (minX + maxX) / 2,
       centerY: (minY + maxY) / 2,
-      scale: Math.max(0.05, Math.min(1000, scale)),
+      scale: Math.max(0.00001, Math.min(1000, scale)),
     });
   };
   useImperativeHandle(ref, () => ({
@@ -502,7 +511,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   };
   const wheel = (event: ReactWheelEvent<SVGSVGElement>) => {
     const before = world(event.clientX, event.clientY, false);
-    const scale = Math.max(0.05, Math.min(1000, view.scale * Math.exp(-event.deltaY * 0.0015)));
+    const scale = Math.max(0.00001, Math.min(1000, view.scale * Math.exp(-event.deltaY * 0.0015)));
     const ratio = view.scale / scale;
     const nextView = {
       scale,
@@ -517,6 +526,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     }, 180);
   };
   const selectEntity = (event: ReactPointerEvent<SVGElement>, entity: DrawingEntity) => {
+    if (!designIds.has(entity.id)) return;
     if (tool !== 'select' || spaceDown || event.button !== 0) return;
     event.stopPropagation();
     onSelect(entity.id);
@@ -649,7 +659,8 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
             strokeDasharray="3 5"
           />
         )}
-        {project.entities.map((entity) => {
+        {displayEntities.map((entity) => {
+          const reference = !designIds.has(entity.id);
           const offset = movePreview?.id === entity.id ? movePreview : { dx: 0, dy: 0 };
           const points = entity.points.map((p) => ({
             ...p,
@@ -657,7 +668,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
             y: p.y + offset.dy,
           }));
           const selected = entity.id === selectedId;
-          const color = selected ? '#c47b3f' : COLORS[entity.kind];
+          const color = reference ? '#8a9b99' : selected ? '#c47b3f' : COLORS[entity.kind];
           const first = screen(points[0]);
           const label =
             entity.kind === 'contour'
@@ -671,7 +682,10 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
               key={entity.id}
               data-entity-id={entity.id}
               data-entity-kind={entity.kind}
-              className={tool === 'select' ? 'selectable-entity' : ''}
+              data-reference={reference ? 'true' : undefined}
+              opacity={reference ? 0.7 : 1}
+              pointerEvents={reference ? 'none' : undefined}
+              className={tool === 'select' && !reference ? 'selectable-entity' : ''}
             >
               {entity.kind === 'point' ? (
                 <g onPointerDown={(event) => selectEntity(event, entity)}>
@@ -881,7 +895,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
                 : 'Choose a point on the arc, then its endpoint.')}
         </div>
       )}
-      {!project.entities.length && !draft.length && (
+      {!displayEntities.length && !draft.length && (
         <div className="canvas-empty-hint" aria-hidden="true">
           <span className="eyebrow">YOUR LOT STARTS HERE</span>
           <h2>A clear space to work.</h2>

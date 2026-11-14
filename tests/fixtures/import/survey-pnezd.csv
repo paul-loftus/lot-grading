@@ -1,0 +1,4 @@
+﻿Number,Northing,Easting,Elevation,Description
+101,5000000.75,2000000.25,98.125,"Road, benchmark"
+102,5000010.75,2000010.25,100.25,Lot corner
+103,5000020.75,2000020.25,101.375,Garage control
