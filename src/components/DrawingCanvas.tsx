@@ -12,9 +12,20 @@ import {
 import { buildSnapIndex, findSnapTargets, snapPlacement } from '../core/snapping';
 import type { SnapTarget } from '../core/snapping';
 import { visibleEntities } from '../core/references';
+import type { GradeControl, GradeOverlay } from '../core/grade';
+import { validateGradePoint } from '../core/grade';
+import { GradeOverlayGraphic } from './GradeOverlay';
 
 export type DrawingTool =
-  'select' | 'pan' | 'polyline' | 'contour' | 'boundary' | 'boundary-rect' | 'building' | 'point';
+  | 'select'
+  | 'pan'
+  | 'polyline'
+  | 'contour'
+  | 'boundary'
+  | 'boundary-rect'
+  | 'building'
+  | 'point'
+  | 'grade';
 export type SegmentMode = 'line' | 'arc';
 export interface CanvasHandle {
   finish: () => void;
@@ -39,6 +50,8 @@ interface DrawingCanvasProps {
   onViewChange: (view: Project['view']) => void;
   onCursorChange: (point: Point | null) => void;
   onDraftChange: (count: number, pendingArc?: boolean) => void;
+  onGradePick: (control: GradeControl) => void;
+  gradeOverlay: GradeOverlay | null;
 }
 
 const COLORS: Record<DrawingEntity['kind'], string> = {
@@ -67,6 +80,8 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     onViewChange,
     onCursorChange,
     onDraftChange,
+    onGradePick,
+    gradeOverlay,
   },
   ref,
 ) {
@@ -80,7 +95,10 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   const [snapTargets, setSnapTargets] = useState<SnapTarget[]>([]);
   const [snapChoice, setSnapChoice] = useState(0);
   const [suspendSnaps, setSuspendSnaps] = useState(false);
-  const activeSnap = objectSnaps && !suspendSnaps ? snapTargets[snapChoice] : undefined;
+  const activeSnap =
+    (objectSnaps || tool === 'grade') && (!suspendSnaps || tool === 'grade')
+      ? snapTargets[snapChoice]
+      : undefined;
   const [spaceDown, setSpaceDown] = useState(false);
   const [drag, setDrag] = useState<{
     kind: 'pan' | 'entity';
@@ -271,7 +289,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   }, [project.id]);
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
-      if (event.key === 'Alt') {
+      if (event.key === 'Alt' && tool !== 'grade') {
         setSuspendSnaps(true);
         setSnapTargets([]);
       }
@@ -290,10 +308,10 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
         const point = {
           x: target.x,
           y: target.y,
-          z: matchSnapElevation && target.z !== null ? target.z : elevation,
+          z: (matchSnapElevation || tool === 'grade') && target.z !== null ? target.z : elevation,
         };
         setHover(point);
-        onCursorChange(point);
+        onCursorChange(tool === 'grade' && target.z === null ? null : point);
       }
       if (event.key === 'Escape') clearDraft();
       if (event.key === 'Enter') {
@@ -338,11 +356,26 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     }
     const raw = world(event.clientX, event.clientY, false);
     const targets =
-      objectSnaps && !event.altKey
+      (objectSnaps || tool === 'grade') && (!event.altKey || tool === 'grade')
         ? findSnapTargets(snapIndex, raw, 12 / view.scale, intersectionSnaps)
         : [];
     const target = targets.find((candidate) => candidate.key === activeSnap?.key) ?? targets[0];
     try {
+      if (tool === 'grade') {
+        if (!target)
+          throw new Error(
+            'Pick an existing geometry target. A free plan location has no supplied elevation.',
+          );
+        if (target.z === null)
+          throw new Error(
+            'Intersection source elevations disagree. Pick a point or endpoint with a known elevation.',
+          );
+        const point = snapPlacement(target, elevation, true);
+        validateGradePoint(point);
+        onGradePick({ point, source: target.source });
+        setDrawingError(null);
+        return;
+      }
       const point = target
         ? snapPlacement(target, elevation, matchSnapElevation)
         : world(event.clientX, event.clientY);
@@ -352,7 +385,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
     }
   };
   const placePoint = (point: Point, exact = false, acquiredElevation = false) => {
-    if (['select', 'pan'].includes(tool)) return;
+    if (['select', 'pan', 'grade'].includes(tool)) return;
     if (Object.values(point).some((value) => !Number.isFinite(value) || Math.abs(value) > 1e12)) {
       setDrawingError('The point is outside the supported coordinate range.');
       return;
@@ -464,7 +497,11 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
   const pointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
     const raw = world(event.clientX, event.clientY, false);
     const targets =
-      objectSnaps && !event.altKey && !spaceDown && !drag && !['select', 'pan'].includes(tool)
+      (objectSnaps || tool === 'grade') &&
+      (!event.altKey || tool === 'grade') &&
+      !spaceDown &&
+      !drag &&
+      !['select', 'pan'].includes(tool)
         ? findSnapTargets(snapIndex, raw, 12 / view.scale, intersectionSnaps)
         : [];
     setSnapTargets(targets);
@@ -474,11 +511,11 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
       ? {
           x: target.x,
           y: target.y,
-          z: matchSnapElevation && target.z !== null ? target.z : elevation,
+          z: (matchSnapElevation || tool === 'grade') && target.z !== null ? target.z : elevation,
         }
       : world(event.clientX, event.clientY);
     setHover(point);
-    onCursorChange(point);
+    onCursorChange(tool === 'grade' && (!target || target.z === null) ? null : point);
     if (drag?.kind === 'pan') {
       setTransientView({
         ...drag.view,
@@ -839,6 +876,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
             )}
           </g>
         )}
+        {gradeOverlay && <GradeOverlayGraphic overlay={gradeOverlay} screen={screen} />}
         <g
           transform={`translate(28 ${size.height - 30})`}
           className="canvas-scale"
@@ -872,7 +910,7 @@ export const DrawingCanvas = forwardRef<CanvasHandle, DrawingCanvasProps>(functi
           · {activeSnap.source}
           <span>
             {activeSnap.z === null ? 'Different source elevations' : `Source Z ${activeSnap.z}`} ·{' '}
-            {matchSnapElevation ? 'Match XYZ' : 'XY only'}
+            {matchSnapElevation || tool === 'grade' ? 'Match XYZ' : 'XY only'}
           </span>
           {snapTargets.length > 1 && (
             <span>

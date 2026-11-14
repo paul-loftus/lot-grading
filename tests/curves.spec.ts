@@ -128,6 +128,7 @@ test('cancel incomplete arcs and mix straight/arc segments without losing the dr
   expect((await current(page)).entities).toHaveLength(0);
   await page.keyboard.press('Escape');
   expect((await current(page)).entities).toHaveLength(0);
+  await expect(page.getByRole('button', { name: 'Cancel drawing', exact: true })).not.toBeVisible();
   expect((await current(page)).schemaVersion).toBe(1);
 
   await clickWorld(page, 20, 30);

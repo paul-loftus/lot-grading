@@ -36,6 +36,7 @@ The first development milestone should be a **small, verifiable Civil 3D export 
 | [14 · Professional workflow priorities](14-professional-feature-priorities/README.md) | Which features should come next to support professional work, and what would make each one useful?       |
 | [15 · Survey and reference import](15-survey-reference-import/README.md)              | What DXF/point subset is implemented, and how are sources, units and coordinates preserved?              |
 | [16 · Working files and recovery](16-file-handling-and-recovery/README.md)            | How do working files, saved copies, external changes, and revision recovery behave?                      |
+| [17 · Grade measurement and editing](17-grade-measurement-and-editing/README.md)      | How are supplied grades measured and explicit endpoint elevation edits previewed and verified?           |
 
 For current feature planning, start with **14**. For the implemented survey/reference workflow, see **[15 · Survey and reference import](15-survey-reference-import/README.md)**. Suggested first read for the original research: **01 → 02 → 04 → 05 → 10**. Use 03, 07, and 08 together when implementing the engine.
 

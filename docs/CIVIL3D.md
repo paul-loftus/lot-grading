@@ -34,6 +34,8 @@ Arbitrary splines and automatic smoothing are outside this implementation. The [
 
 ## Receiving checklist
 
+Applied grade edits use the existing varying-Z straight-polyline export. Check held/moving endpoint Z and independently calculate rise divided by horizontal run after receiving. Temporary Grade check arrows and grade-edit previews are not exported. The [grade guide](GRADES.md) distinguishes preview from committed geometry and documents the fixed A→B sign convention.
+
 Projects containing imported references use schema 3. References are excluded from DXF by default; choose each source's **Include reference in DXF export** setting under **Features** to deliver its supported geometry. Display visibility is independent of export inclusion. Unsupported source records remain in the import report and original attachment; selecting a source does not make those unsupported records exportable. Review the [import guide](IMPORT.md) and compare known controls before handoff. Coordinate-context labels do not transform data, and no terrain surface is created by importing points.
 
 1. In Civil 3D 2025 run `ABOUT` and record the exact update/build. Export DXF from LotGrade and record its project units and coordinate/benchmark context.

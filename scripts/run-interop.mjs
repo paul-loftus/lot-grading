@@ -8,6 +8,7 @@ for (const args of [
   ['scripts/verify-dxf.py'],
   ['scripts/verify-dxf.py', '--example'],
   ['scripts/verify-import.py'],
+  ['scripts/verify-grade.py'],
 ]) {
   const result = spawnSync(python, args, { stdio: 'inherit' });
   if (result.error) console.error(result.error.message);

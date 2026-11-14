@@ -4,7 +4,7 @@
 
 This guide walks through drawing a small residential lot, assigning elevations, making lines meet, drawing true circular arcs, and saving/exporting your work. Allow about 20–30 minutes for the first pass.
 
-The current application supports manually drawn, elevated linework, circular arcs, object snapping, and exact placement while drawing. Arbitrary splines, automatic smoothing, automatic joins, slope calculations, and automatic grading are not available yet. All sample coordinates are illustrative.
+The current application supports manually drawn, elevated linework, circular arcs, object snapping, exact placement, two-point grade checks, and explicit grade edits on straight polylines. Arbitrary splines, automatic smoothing/joins, terrain generation, and automatic grading are not available yet. All sample coordinates are illustrative.
 
 This guide includes the curve update after the original `rev-0` snapshot. If your app does not show **Segment type**, rebuild and launch the current source with `npm start`; the original Rev 0 bundles do not contain these controls.
 
@@ -256,6 +256,12 @@ Project-level **Duplicate**, **Rename / details**, and **Delete** are available 
 
 ## 11. Save, reopen, and export
 
+### Check and edit grades before saving
+
+Choose **Grade check** (`G`), then pick two existing geometry targets. It always acquires supplied XYZ, including from visible locked references. Properties reports horizontal run, B−A elevation difference, signed A→B percent grade, H:V magnitude, and downhill direction. A third pick starts another pair; Escape clears it. A crossing with different source elevations cannot supply one Z.
+
+To set a line's grade, select a proposed straight polyline, expand **Grade / slope**, choose the segment and held endpoint, and enter a signed A→B percentage. Review the moving Z and any affected adjacent segment, then choose **Apply grade**. Positive always means B is above A, even when B is held. The change is one Undo/Redo step. Curved paths and protected object kinds cannot receive this nonplanar edit. Preview labels/arrows stay out of saved files and DXF. Follow the [complete grade guide](../GRADES.md) for examples and zero-run cases.
+
 ### Save an editable project
 
 Committed changes automatically save to the local project library. You can also click **Save project**. Finish any draft first: its preview points are not saved drawing features.
@@ -301,6 +307,7 @@ Tool shortcuts work when you are not typing in an input field. Use **Command** o
 | `B`                        | Polygon lot boundary; choose Rectangle in Properties for a rectangular boundary                |
 | `R`                        | Building rectangle                                                                             |
 | `P`                        | Spot elevation                                                                                 |
+| `G`                        | Grade check between existing source controls                                                   |
 | `A`                        | Switch the active Polyline, Contour, or polygon Boundary to Arc mode                           |
 | `S`                        | Switch the active path to Line mode                                                            |
 | Hold `Space` and drag      | Temporarily pan                                                                                |

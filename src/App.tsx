@@ -118,6 +118,7 @@ function MiniPlan({ project }: { project?: Project }) {
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [active, setActive] = useState<Project | null>(null);
+  const [workspaceSession, setWorkspaceSession] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('recent');
@@ -242,6 +243,7 @@ export default function App() {
         fileReads.current++;
         setFileState(null);
         setActive(loaded);
+        setWorkspaceSession((session) => session + 1);
         activeRef.current = loaded;
         setMenu(null);
         setSaveStatus('Saved to library');
@@ -511,7 +513,7 @@ export default function App() {
     <>
       {active ? (
         <Workspace
-          key={active.id}
+          key={`${active.id}-${workspaceSession}`}
           project={active}
           onChange={change}
           onBack={() => void back()}

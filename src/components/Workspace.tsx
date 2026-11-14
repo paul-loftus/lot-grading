@@ -19,6 +19,7 @@ import {
   Pentagon,
   Plus,
   Redo2,
+  Ruler,
   Save,
   ScanLine,
   Slash,
@@ -39,6 +40,8 @@ import { PrecisionEntry } from './PrecisionEntry';
 import { ImportReferenceDialog } from './ImportReferenceDialog';
 import { ReferencePanel } from './ReferencePanel';
 import { FileStatusBar } from './FileStatusBar';
+import { GradeCheckPanel, SegmentGradePanel } from './GradePanel';
+import type { GradeControl, GradeOverlay } from '../core/grade';
 import type { FileState } from '../core/files';
 import type { CanvasHandle, DrawingTool, SegmentMode } from './DrawingCanvas';
 import '../styles/workspace.css';
@@ -97,6 +100,11 @@ const TOOL_INFO: Record<DrawingTool, { name: string; hint: string; shortcut: str
     hint: 'Set the elevation, then click to place a spot.',
     shortcut: 'P',
   },
+  grade: {
+    name: 'Grade check',
+    hint: 'Pick existing controls A and B to measure their supplied elevations. Escape clears the check.',
+    shortcut: 'G',
+  },
 };
 const ICONS = {
   select: MousePointer2,
@@ -107,6 +115,7 @@ const ICONS = {
   'boundary-rect': Square,
   building: Building2,
   point: MapPin,
+  grade: Ruler,
 };
 const KIND_NAMES = {
   polyline: 'Polyline',
@@ -278,6 +287,8 @@ export function Workspace({
   const [intersectionSnaps, setIntersectionSnaps] = useState(true);
   const [draftCount, setDraftCount] = useState(0);
   const [pendingArc, setPendingArc] = useState(false);
+  const [gradeControls, setGradeControls] = useState<GradeControl[]>([]);
+  const [segmentOverlay, setSegmentOverlay] = useState<GradeOverlay | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [tab, setTab] = useState<'properties' | 'features'>('properties');
   const [menu, setMenu] = useState(false);
@@ -298,6 +309,10 @@ export function Workspace({
     setHistoryVersion((value) => value + 1);
   }, [project.id]);
   useEffect(() => setEditError(null), [selectedId, project.id]);
+  useEffect(() => {
+    setGradeControls([]);
+    setSegmentOverlay(null);
+  }, [tool, project.id]);
   const commitProject = (candidate: Project) => {
     let next: Project;
     try {
@@ -315,6 +330,8 @@ export function Workspace({
     setHistoryVersion((value) => value + 1);
     setEditError(null);
     onChange(next);
+    setGradeControls([]);
+    setSegmentOverlay(null);
     return true;
   };
   const commit = (entities: DrawingEntity[]) =>
@@ -361,6 +378,8 @@ export function Workspace({
     setSelectedId(copy.id);
   };
   const undo = () => {
+    setGradeControls([]);
+    setSegmentOverlay(null);
     canvas.current?.cancel();
     const state = history.current.past.pop();
     if (!state) return;
@@ -369,6 +388,8 @@ export function Workspace({
     onChange({ ...project, ...state, updatedAt: new Date().toISOString() });
   };
   const redo = () => {
+    setGradeControls([]);
+    setSegmentOverlay(null);
     canvas.current?.cancel();
     const state = history.current.future.pop();
     if (!state) return;
@@ -425,6 +446,7 @@ export function Workspace({
         b: 'boundary',
         r: 'building',
         p: 'point',
+        g: 'grade',
       };
       const next = shortcuts[event.key.toLowerCase()];
       if (next) {
@@ -437,7 +459,12 @@ export function Workspace({
         event.preventDefault();
         deleteSelected();
       }
-      if (event.key === 'Escape') setSelectedId(null);
+      if (event.key === 'Escape') {
+        canvas.current?.cancel();
+        setSelectedId(null);
+        setGradeControls([]);
+        setSegmentOverlay(null);
+      }
     };
     window.addEventListener('keydown', keyDown);
     return () => window.removeEventListener('keydown', keyDown);
@@ -591,14 +618,19 @@ export function Workspace({
         </div>
         <div className="toolbar-section toolbar-settings">
           <button
-            className={`snap-toggle ${objectSnaps ? 'active' : ''}`}
-            aria-pressed={objectSnaps}
+            className={`snap-toggle ${objectSnaps || tool === 'grade' ? 'active' : ''}`}
+            aria-pressed={objectSnaps || tool === 'grade'}
+            disabled={tool === 'grade'}
             aria-label="Object snaps"
             onClick={() => setObjectSnaps(!objectSnaps)}
-            title="Snap to geometry; hold Alt/Option to temporarily bypass object snaps"
+            title={
+              tool === 'grade'
+                ? 'Grade check uses source XYZ targets'
+                : 'Snap to geometry; hold Alt/Option to temporarily bypass object snaps'
+            }
           >
             <Crosshair size={14} />
-            Object snap<span>{objectSnaps ? 'ON' : 'OFF'}</span>
+            Object snap<span>{objectSnaps || tool === 'grade' ? 'ON' : 'OFF'}</span>
           </button>
           <button
             className={`snap-toggle ${project.settings.snapToGrid ? 'active' : ''}`}
@@ -629,6 +661,7 @@ export function Workspace({
               'boundary',
               'building',
               'point',
+              'grade',
             ] as DrawingTool[]
           ).map((item, i) => {
             const Icon = ICONS[item];
@@ -664,7 +697,7 @@ export function Workspace({
           <div className="canvas-context">
             <span className="canvas-context-dot" />
             <span>{TOOL_INFO[tool].name}</span>
-            {!['select', 'pan'].includes(tool) && (
+            {!['select', 'pan', 'grade'].includes(tool) && (
               <>
                 <span className="context-divider" />
                 <span className="context-elevation">
@@ -682,6 +715,19 @@ export function Workspace({
             objectSnaps={objectSnaps}
             matchSnapElevation={matchSnapElevation}
             intersectionSnaps={intersectionSnaps}
+            onGradePick={(control) => {
+              setGradeControls((previous) =>
+                previous.length >= 2 ? [control] : [...previous, control],
+              );
+              setTab('properties');
+            }}
+            gradeOverlay={
+              tool === 'grade'
+                ? gradeControls.length
+                  ? { a: gradeControls[0].point, b: gradeControls[1]?.point }
+                  : null
+                : segmentOverlay
+            }
             onElevationChange={setElevation}
             onAnchorChange={setPlacementAnchor}
             selectedId={selectedId}
@@ -889,6 +935,20 @@ export function Workspace({
                       </div>
                     )}
                   </div>
+                  {selected.kind !== 'point' && (
+                    <SegmentGradePanel
+                      key={selected.id}
+                      project={project}
+                      entity={selected}
+                      unit={unit}
+                      onOverlay={setSegmentOverlay}
+                      onApply={(entity) =>
+                        commit(
+                          project.entities.map((item) => (item.id === entity.id ? entity : item)),
+                        )
+                      }
+                    />
+                  )}
                   <details className="vertex-details">
                     <summary>
                       Vertex coordinates
@@ -1039,7 +1099,14 @@ export function Workspace({
                     <h2>{TOOL_INFO[tool].name}</h2>
                     <p>{TOOL_INFO[tool].hint}</p>
                   </div>
-                  {!['select', 'pan'].includes(tool) && (
+                  {tool === 'grade' && (
+                    <GradeCheckPanel
+                      controls={gradeControls}
+                      unit={unit}
+                      onClear={() => setGradeControls([])}
+                    />
+                  )}
+                  {!['select', 'pan', 'grade'].includes(tool) && (
                     <>
                       <NumericField
                         label="Drawing elevation"
@@ -1223,7 +1290,10 @@ export function Workspace({
             N <strong>{cursor ? precision(cursor.y) : '—'}</strong>
           </span>
           <span>
-            Z <strong>{precision(elevation)}</strong>
+            Z{' '}
+            <strong>
+              {tool === 'grade' ? (cursor ? precision(cursor.z) : '—') : precision(elevation)}
+            </strong>
           </span>
           <span className="coordinate-unit">{unit}</span>
         </div>

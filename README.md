@@ -26,6 +26,7 @@ For step-by-step drawing instructions, follow the **[LotGrade tutorial](docs/tut
 - Curves: mix straight and exact three-point circular arc segments in polylines, contours, and polygon boundaries; edit segment radius/direction and retain true curves in DXF.
 - Editing: selection, moving features, numeric elevation/vertex editing, custom DXF layers, undo/redo, grid snapping, pan, zoom, and fit drawing.
 - Precision placement: endpoint/point/midpoint/arc-center/intersection snaps with visible targets, optional source-elevation acquisition, and exact coordinate or survey-bearing/distance entry during drawing.
+- [Grade checks and edits](docs/GRADES.md): measure supplied control elevations with signed percent/H:V/downhill arrows, or preview an undoable straight-polyline grade edit while holding either endpoint.
 - [Survey/reference import](docs/IMPORT.md): preview a documented DXF subset or mapped CSV/text points, confirm units/alignment, retain original sources, and snap to locked references with explicit DXF inclusion.
 - Local saving, portable `.lotgrade` save/open, and elevation-preserving **DXF R2013 export** for every available drawing tool.
 - File handling: visible desktop working paths, recent files/folders, Finder/Explorer reveal, moved-file relinking, external-change checks, bounded revisions, and recovery as a separate project copy.
