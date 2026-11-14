@@ -46,6 +46,114 @@
   background: #fcfcf8;
   z-index: 5;
 }
+.file-status-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 26px;
+  border-bottom: 1px solid #dce1d8;
+  background: #f2f5ed;
+}
+.file-location {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+}
+.file-location code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #607465;
+  font-size: 10px;
+}
+.file-status-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.file-status-actions button {
+  background: #fcfcf8;
+  border: 1px solid #d2ddcd;
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: #41614d;
+  font-size: 10px;
+}
+.file-status-conflict,
+.file-status-missing {
+  background: #fff1e4;
+}
+.file-status-modified {
+  background: #faf7e8;
+}
+.file-problem {
+  color: #98512f;
+  line-height: 1.5;
+}
+.modal.recovery-dialog {
+  width: 780px;
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+}
+.recovery-error {
+  color: #a44e32 !important;
+}
+.revision-list {
+  max-height: 360px;
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+}
+.revision-list button {
+  display: grid;
+  gap: 5px;
+  text-align: left;
+  background: #f4f7ee;
+  border: 1px solid #d5dfcf;
+  border-radius: 5px;
+  padding: 12px;
+  color: #41614d;
+}
+.revision-list button.selected {
+  border-color: #3c735a;
+  background: #e7f0e0;
+}
+.revision-list span {
+  font-size: 11px;
+}
+.recent-files {
+  overflow: auto;
+  max-height: 35vh;
+  padding: 0 12px;
+}
+.recent-file {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: #42634f;
+}
+.recent-file small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  max-width: 190px;
+}
+.recent-locate {
+  border: none;
+  background: transparent;
+  color: #41614d;
+  margin-left: 10px;
+  font-size: 11px;
+}
 .workspace-back {
   border: 0;
   background: transparent;

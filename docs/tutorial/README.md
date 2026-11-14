@@ -266,11 +266,13 @@ To keep an editable file in a folder you choose:
 2. Choose **Save project as…**.
 3. Save the `.lotgrade` file.
 
-**Save project as…** writes a snapshot copy. Later edits continue saving to the local library; save another copy when you want to update your external file.
+On desktop, **Save project as…** associates that file as the working file. Later committed edits continue autosaving to the library; **Save project** explicitly updates the associated working file. Choose **Save a copy…** to write a snapshot elsewhere without changing the association. The file-status strip shows the path and whether the working file is saved, modified, missing, or changed externally. **Saved to library** describes the separate local copy.
 
 Adding an arc upgrades the project file to schema 2, which stays in place even if you later straighten the arc. This application still opens older schema 1 projects. Original Rev 0 applications reject schema 2 rather than silently opening its curves as straight segments; use the current application when sharing a curved project.
 
-To reopen a library project, click **Projects** and select its card. To open an external `.lotgrade` file, choose **Open project file** on the dashboard, or **Open project file…** from the save-options menu. Opening a file imports a copy into the library. If its project ID is already present, LotGrade creates another entry rather than replacing the existing project.
+To reopen the latest library snapshot, click **Projects** and select its card. To open a disk revision, choose **Open project file** or a recent file. On desktop, this associates the path and retains project identity; the previous differing library design is checkpointed before replacement. Browser imports remain separate library copies when an ID already exists.
+
+Use **Recovery / checkpoints** to make a manual checkpoint or restore a revision as a separate recovered project. Use **Relink working file…** for a moved file matching the last saved revision. An externally changed file blocks Save; preserve current work with Save As/Copy elsewhere before inspecting the external version. See the [complete file/recovery guide](../FILES.md) for status meanings, retention limits, and browser differences.
 
 The browser preview (`npm run dev`) stores its projects separately from the desktop app and downloads saved copies/exports through the browser. Use `.lotgrade` files to move work between them or between computers.
 

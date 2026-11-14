@@ -139,7 +139,7 @@ test('native desktop saves, exports via native dialog, reopens, and flushes on c
     await page.getByRole('button', { name: 'More save options' }).click();
     await page.getByRole('button', { name: 'Open project file…' }).click();
     await expect(
-      page.getByRole('heading', { name: 'Native desktop lot (imported)', exact: true }),
+      page.getByRole('heading', { name: 'Native desktop lot', exact: true }),
     ).toBeVisible();
   } finally {
     if (application) await application.close();

@@ -13,7 +13,7 @@ npm ci
 npm start
 ```
 
-`npm start` builds and launches the desktop application. No server, account, or Python runtime is needed to use the app. Projects are stored in the application's local user-data directory. **Save project** writes to that library; **Save project as…** writes a portable `.lotgrade` copy through a native file dialog.
+`npm start` builds and launches the desktop application. No server, account, or Python runtime is needed to use the app. Committed edits automatically save to the local library. On desktop, **Save project as…** chooses and associates a working `.lotgrade` file; **Save project** updates it, while **Save a copy…** leaves that association unchanged. The file-status strip shows the location and unsaved/conflict state. See [working files and recovery](docs/FILES.md).
 
 For a browser development preview, run `npm run dev` and open the local address it prints. Browser projects are stored in that browser, separately from desktop projects. Use `.lotgrade` copies to move projects between environments or computers.
 
@@ -28,6 +28,7 @@ For step-by-step drawing instructions, follow the **[LotGrade tutorial](docs/tut
 - Precision placement: endpoint/point/midpoint/arc-center/intersection snaps with visible targets, optional source-elevation acquisition, and exact coordinate or survey-bearing/distance entry during drawing.
 - [Survey/reference import](docs/IMPORT.md): preview a documented DXF subset or mapped CSV/text points, confirm units/alignment, retain original sources, and snap to locked references with explicit DXF inclusion.
 - Local saving, portable `.lotgrade` save/open, and elevation-preserving **DXF R2013 export** for every available drawing tool.
+- File handling: visible desktop working paths, recent files/folders, Finder/Explorer reveal, moved-file relinking, external-change checks, bounded revisions, and recovery as a separate project copy.
 - Explicit meters, international feet, and US survey feet; exported coordinates remain in project units with no origin shift or Z flattening.
 
 Explore the included example from the project dashboard. It is illustrative linework, not an engineered grading design.

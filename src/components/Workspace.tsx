@@ -38,6 +38,8 @@ import { DrawingCanvas } from './DrawingCanvas';
 import { PrecisionEntry } from './PrecisionEntry';
 import { ImportReferenceDialog } from './ImportReferenceDialog';
 import { ReferencePanel } from './ReferencePanel';
+import { FileStatusBar } from './FileStatusBar';
+import type { FileState } from '../core/files';
 import type { CanvasHandle, DrawingTool, SegmentMode } from './DrawingCanvas';
 import '../styles/workspace.css';
 
@@ -50,6 +52,13 @@ export interface WorkspaceProps {
   onExport: () => void;
   onImport?: () => void;
   saveStatus: string;
+  fileState: FileState | null;
+  onSaveCopy: () => void;
+  onCheckFile: () => void;
+  onRevealFile: () => void;
+  onRelinkFile: () => void;
+  onRecovery: () => void;
+  fileDialogOpen: boolean;
 }
 const TOOL_INFO: Record<DrawingTool, { name: string; hint: string; shortcut: string }> = {
   select: {
@@ -250,6 +259,13 @@ export function Workspace({
   onExport,
   onImport,
   saveStatus,
+  fileState,
+  onSaveCopy,
+  onCheckFile,
+  onRevealFile,
+  onRelinkFile,
+  onRecovery,
+  fileDialogOpen,
 }: WorkspaceProps) {
   const [tool, setTool] = useState<DrawingTool>('select');
   const [segmentMode, setSegmentMode] = useState<SegmentMode>('line');
@@ -362,7 +378,7 @@ export function Workspace({
   };
   useEffect(() =>
     platform.onMenuAction((action) => {
-      if (referenceImport) return;
+      if (referenceImport || fileDialogOpen) return;
       if (action !== 'undo' && action !== 'redo') return;
       if (document.activeElement?.matches('input, textarea, [contenteditable]')) {
         document.execCommand(action);
@@ -372,7 +388,7 @@ export function Workspace({
   );
   useEffect(() => {
     const keyDown = (event: KeyboardEvent) => {
-      if (referenceImport) return;
+      if (referenceImport || fileDialogOpen) return;
       const input = (event.target as HTMLElement).closest(
         'input, textarea, select, [contenteditable]',
       );
@@ -487,6 +503,15 @@ export function Workspace({
                   <FileDown size={15} />
                   Save project as…
                 </button>
+                <button
+                  onClick={() => {
+                    onSaveCopy();
+                    setMenu(false);
+                  }}
+                >
+                  <Copy size={15} />
+                  Save a copy…
+                </button>
                 {onImport && (
                   <button
                     onClick={() => {
@@ -523,6 +548,16 @@ export function Workspace({
           </button>
         </div>
       </header>
+      <FileStatusBar
+        state={fileState}
+        onCheck={onCheckFile}
+        onReveal={onRevealFile}
+        onRelink={onRelinkFile}
+        onRecovery={() => {
+          canvas.current?.cancel();
+          onRecovery();
+        }}
+      />
       <div className="workspace-toolbar">
         <div className="toolbar-section">
           <span className="toolbar-label">PLAN WORKSPACE</span>

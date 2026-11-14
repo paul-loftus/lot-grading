@@ -34,6 +34,8 @@ The first development milestone should be a **small, verifiable Civil 3D export 
 | [12 · Sources](12-sources/README.md)                                                  | Where is the primary evidence, and what could not be verified?                                           |
 | [13 · Arcs and curves](13-arcs-and-curves/README.md)                                  | Which drawing tools need curves, how should users construct them, and how are exact arcs saved/exported? |
 | [14 · Professional workflow priorities](14-professional-feature-priorities/README.md) | Which features should come next to support professional work, and what would make each one useful?       |
+| [15 · Survey and reference import](15-survey-reference-import/README.md)              | What DXF/point subset is implemented, and how are sources, units and coordinates preserved?              |
+| [16 · Working files and recovery](16-file-handling-and-recovery/README.md)            | How do working files, saved copies, external changes, and revision recovery behave?                      |
 
 For current feature planning, start with **14**. For the implemented survey/reference workflow, see **[15 · Survey and reference import](15-survey-reference-import/README.md)**. Suggested first read for the original research: **01 → 02 → 04 → 05 → 10**. Use 03, 07, and 08 together when implementing the engine.
 

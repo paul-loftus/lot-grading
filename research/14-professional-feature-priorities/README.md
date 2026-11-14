@@ -18,6 +18,8 @@ The ranking combines observed gaps in the current code, the user's recent file-l
 
 ## What already exists
 
+**Feature 3 checkpoint · November 13, 2026:** [working-file handling and recovery](../../docs/FILES.md) now adds visible locations, separate Save/Save As/Copy actions, remembered recent files/folders, Finder/Explorer reveal, external-change protection, moved-file relinking, bounded revisions, and restoration as a separate copy. Paths stay in local preferences. See the [implementation decisions](../16-file-handling-and-recovery/README.md). Feature 4 remains unstarted.
+
 The application already has a project library, portable project copies, automatic library saves with atomic file replacement, undo/redo, post-placement numeric vertex editing, grid snapping, single-feature movement/duplication, exact planar circular arcs, basic plan measurements, editable DXF layer names, and DXF export.
 
 At the planning baseline, the important gaps were object snapping, precise entry during drawing, survey/reference import, remembered working-file locations, revision recovery, grade calculations, a fuller editing workflow, layer visibility/locking, semantic grading controls, and a terrain engine. See the implementation checkpoint above for subsequent progress. Current curves have one elevation throughout. Manually drawn contours do not establish a continuous ground surface.
@@ -172,7 +174,7 @@ Use pilot evidence to choose the first template types. Townhouse rows require sh
 3. **Actual surface-based grading: priorities 8–10.** Build and inspect terrain, prove surface handoff, then add bounded grading operations and diagnostics.
 4. **Review and repeated production: priorities 11–12.** Add sections/quantities and reuse workflows validated on real lots.
 
-The recommended first implementation ticket was **endpoint/point snapping plus visible snap feedback and explicit XY-versus-Z behavior**. The checkpoints above now record the precision controls and the first survey/reference import workflow. The next unstarted feature is priority 3, professional file handling/recovery; perpendicular/tangent/tracking snaps remain refinements to priority 1.
+The recommended first implementation ticket was **endpoint/point snapping plus visible snap feedback and explicit XY-versus-Z behavior**. The checkpoints now record the precision controls, survey/reference import, and working-file handling/recovery. The next unstarted feature is priority 4, slope measurement and explicit grade edits; perpendicular/tangent/tracking snaps remain refinements to priority 1.
 
 ## Professional readiness alongside the feature work
 

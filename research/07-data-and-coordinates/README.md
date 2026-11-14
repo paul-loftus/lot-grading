@@ -4,6 +4,8 @@
 
 ## Coordinate contract
 
+**File/recovery implementation:** working paths, recent locations and expected file hashes stay in machine-local preferences, outside portable project data. Bounded revision snapshots preserve complete project geometry and embedded source data; recovery creates a new project identity. See the [file guide](../../docs/FILES.md) and [implementation decisions](../16-file-handling-and-recovery/README.md).
+
 **Implemented import scope, November 13, 2026:** schema 3 preserves source units/XYZ without conversion, locked source groups, original bytes/checksums, mappings/reports, and horizontal/vertical labels (unknown when blank). Source units must match the project. Labels never transform data. See the [import guide](../../docs/IMPORT.md) and [implementation decisions](../15-survey-reference-import/README.md); the broader conversion/terrain architecture below remains research.
 
 Use an explicitly defined projected or local engineering coordinate system. Store engineering values in **double precision**, with canonical computation in meters and an explicit conversion back to source/output units. Preserve original source metadata and checksums; never overwrite a source file during normalization.

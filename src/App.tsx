@@ -21,6 +21,8 @@ import { UNIT_LABELS, type Project, type Units } from './core/types';
 import { entityBounds, entitySvgPath } from './core/geometry';
 import { isDesktop, platform } from './platform';
 import { visibleEntities } from './core/references';
+import { RecoveryDialog } from './components/RecoveryDialog';
+import type { FileState, RecentFile } from './core/files';
 
 function relativeDate(value: string): string {
   const date = new Date(value);
@@ -127,6 +129,10 @@ export default function App() {
   const [menu, setMenu] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [saveStatus, setSaveStatus] = useState('Saved to library');
+  const [fileState, setFileState] = useState<FileState | null>(null);
+  const [recentFiles, setRecentFiles] = useState<RecentFile[]>([]);
+  const [recoveryOpen, setRecoveryOpen] = useState(false);
+  const fileReads = useRef(0);
   const activeRef = useRef(active);
   const writes = useRef<Promise<void>>(Promise.resolve());
   const saveSequence = useRef(0);
@@ -139,6 +145,31 @@ export default function App() {
       ),
     [],
   );
+  const refreshRecents = useCallback(async () => {
+    try {
+      setRecentFiles(await platform.listRecentFiles());
+    } catch (error) {
+      notifyError(error);
+    }
+  }, [notifyError]);
+  const refreshFile = useCallback(
+    async (project = activeRef.current) => {
+      if (!project) return;
+      const request = ++fileReads.current;
+      try {
+        const info = await platform.getFileState(project);
+        if (
+          request === fileReads.current &&
+          activeRef.current?.id === project.id &&
+          activeRef.current.updatedAt === project.updatedAt
+        )
+          setFileState(info);
+      } catch (error) {
+        notifyError(error);
+      }
+    },
+    [notifyError],
+  );
   useEffect(() => {
     platform
       .listProjects()
@@ -146,6 +177,23 @@ export default function App() {
       .catch(notifyError)
       .finally(() => setLoading(false));
   }, [notifyError]);
+  useEffect(() => {
+    void refreshRecents();
+  }, [refreshRecents]);
+  useEffect(() => {
+    if (!active) {
+      setFileState(null);
+      void refreshRecents();
+      return;
+    }
+    const timer = setTimeout(() => void refreshFile(active), 200);
+    const focus = () => void refreshFile();
+    window.addEventListener('focus', focus);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('focus', focus);
+    };
+  }, [active, refreshFile, refreshRecents]);
   useEffect(() => {
     if (!message) return;
     const timer = setTimeout(() => setMessage(''), 7000);
@@ -177,6 +225,7 @@ export default function App() {
       try {
         const valid = validateProject({ ...project, updatedAt: new Date().toISOString() });
         activeRef.current = valid;
+        fileReads.current++;
         setActive(valid);
         void persist(valid);
       } catch (error) {
@@ -185,21 +234,38 @@ export default function App() {
     },
     [persist, notifyError],
   );
-  const open = useCallback(async (project: Project) => {
-    await writes.current.catch(() => {});
-    setActive(project);
-    activeRef.current = project;
-    setMenu(null);
-    setSaveStatus('Saved to library');
-  }, []);
+  const open = useCallback(
+    async (project: Project) => {
+      try {
+        await writes.current.catch(() => {});
+        const loaded = await platform.openLibraryProject(project.id);
+        fileReads.current++;
+        setFileState(null);
+        setActive(loaded);
+        activeRef.current = loaded;
+        setMenu(null);
+        setSaveStatus('Saved to library');
+        await refreshFile(loaded);
+        await refreshRecents();
+      } catch (error) {
+        notifyError(error);
+      }
+    },
+    [refreshFile, refreshRecents, notifyError],
+  );
   const save = useCallback(async () => {
     try {
       commitFocusedField();
-      if (activeRef.current) await persist(activeRef.current);
-    } catch {
-      /* persist reports the failure */
+      const project = activeRef.current;
+      if (!project) return;
+      await persist(project).catch(() => {});
+      await platform.saveWorkingFile(project);
+    } catch (error) {
+      notifyError(error);
+    } finally {
+      await refreshFile();
     }
-  }, [persist]);
+  }, [persist, refreshFile, notifyError]);
   const saveAs = useCallback(async () => {
     try {
       commitFocusedField();
@@ -208,12 +274,44 @@ export default function App() {
       const snapshot = validateProject(project);
       void persist(snapshot);
       const result = await platform.saveProjectFile(snapshot);
-      if (result)
-        setMessage('Project copy saved. Open the .lotgrade file on either Mac or Windows.');
+      if (result) {
+        setMessage(
+          isDesktop
+            ? 'Working file saved and associated. Save will update this file; library autosaves remain separate.'
+            : 'Portable copy downloaded. Browser saves continue in the browser library.',
+        );
+        await refreshFile();
+        await refreshRecents();
+      }
     } catch (error) {
       notifyError(error);
     }
-  }, [persist, notifyError]);
+  }, [persist, notifyError, refreshFile, refreshRecents]);
+  const saveCopy = useCallback(async () => {
+    try {
+      commitFocusedField();
+      if (!activeRef.current) return;
+      const result = await platform.saveProjectCopy(validateProject(activeRef.current));
+      if (result) setMessage('Project copy saved. The working-file association is unchanged.');
+    } catch (error) {
+      notifyError(error);
+    }
+  }, [notifyError]);
+  const relink = useCallback(
+    async (project = activeRef.current) => {
+      if (!project) return;
+      try {
+        if (await platform.relinkProjectFile(project)) {
+          await refreshFile();
+          await refreshRecents();
+          setMessage('Working file relinked. Current library edits are kept.');
+        }
+      } catch (error) {
+        notifyError(error);
+      }
+    },
+    [refreshFile, refreshRecents, notifyError],
+  );
   const exportProject = useCallback(async () => {
     try {
       commitFocusedField();
@@ -234,22 +332,39 @@ export default function App() {
   const importProject = useCallback(async () => {
     try {
       commitFocusedField();
+      if (activeRef.current) await persist(activeRef.current);
       const imported = await platform.openProjectFile();
       if (!imported) return;
-      const existing = projects.some((p) => p.id === imported.id);
+      const existing = !isDesktop && projects.some((p) => p.id === imported.id);
       const copy = {
         ...imported,
         id: existing ? crypto.randomUUID() : imported.id,
         name: existing ? `${imported.name.slice(0, 105)} (imported)` : imported.name,
-        updatedAt: new Date().toISOString(),
+        updatedAt: isDesktop ? imported.updatedAt : new Date().toISOString(),
       };
       await persist(copy);
       await open(copy);
-      setMessage('Project imported into your local library.');
+      setMessage(
+        isDesktop
+          ? 'Working file opened. Library autosaves are separate; Save updates the working file.'
+          : 'Project imported into your browser library.',
+      );
     } catch (error) {
       notifyError(error);
     }
   }, [projects, persist, open, notifyError]);
+  const openRecent = useCallback(
+    async (key: string) => {
+      try {
+        const project = await platform.openRecentFile(key);
+        await persist(project);
+        await open(project);
+      } catch (error) {
+        notifyError(error);
+      }
+    },
+    [persist, open, notifyError],
+  );
   const newProject = useCallback(() => {
     setName('');
     setDescription('');
@@ -271,12 +386,14 @@ export default function App() {
   useEffect(
     () =>
       platform.onMenuAction((action) => {
+        if (recoveryOpen && action !== 'close') return;
         // Text Undo/Redo must keep focus so the workspace can undo the field edit.
         if (action !== 'undo' && action !== 'redo') commitFocusedField();
         if (action === 'new') newProject();
         if (action === 'open') void importProject();
         if (action === 'save') void save();
         if (action === 'save-as') void saveAs();
+        if (action === 'save-copy') void saveCopy();
         if (action === 'export') void exportProject();
         if (action === 'close') {
           void (async () => {
@@ -290,10 +407,21 @@ export default function App() {
           })();
         }
       }),
-    [newProject, importProject, save, saveAs, exportProject, persist, notifyError],
+    [
+      newProject,
+      importProject,
+      save,
+      saveAs,
+      saveCopy,
+      exportProject,
+      persist,
+      notifyError,
+      recoveryOpen,
+    ],
   );
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
+      if (recoveryOpen) return;
       if (!(event.metaKey || event.ctrlKey)) return;
       if (event.key.toLowerCase() === 's') {
         event.preventDefault();
@@ -303,7 +431,7 @@ export default function App() {
     };
     window.addEventListener('keydown', listener);
     return () => window.removeEventListener('keydown', listener);
-  }, [save, saveAs]);
+  }, [save, saveAs, recoveryOpen]);
 
   const visible = useMemo(
     () =>
@@ -392,6 +520,19 @@ export default function App() {
           onExport={() => void exportProject()}
           onImport={() => void importProject()}
           saveStatus={saveStatus}
+          fileState={fileState}
+          onSaveCopy={() => void saveCopy()}
+          onCheckFile={() => void refreshFile()}
+          onRevealFile={() => {
+            if (activeRef.current)
+              void platform.revealProjectFile(activeRef.current.id).catch(notifyError);
+          }}
+          onRelinkFile={() => void relink()}
+          onRecovery={() => {
+            commitFocusedField();
+            setRecoveryOpen(true);
+          }}
+          fileDialogOpen={recoveryOpen}
         />
       ) : (
         <div className="dashboard">
@@ -416,6 +557,35 @@ export default function App() {
               <FileUp size={18} />
               Open project file
             </button>
+            <button className="nav-item" onClick={() => setRecoveryOpen(true)}>
+              Recovery / checkpoints
+            </button>
+            {isDesktop && recentFiles.length > 0 && (
+              <div className="recent-files">
+                <div className="sidebar-section">RECENT FILES</div>
+                {recentFiles.map((recent) => (
+                  <div key={recent.key}>
+                    <button
+                      className="recent-file"
+                      aria-label={`Open recent ${recent.name}`}
+                      title={recent.path}
+                      onClick={() => void openRecent(recent.key)}
+                    >
+                      <strong>{recent.name}</strong>
+                      <small>{recent.available ? recent.path : `Missing · ${recent.path}`}</small>
+                    </button>
+                    {!recent.available && projects.some((p) => p.id === recent.projectId) && (
+                      <button
+                        className="recent-locate"
+                        onClick={() => void relink(projects.find((p) => p.id === recent.projectId))}
+                      >
+                        Locate…
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="sidebar-bottom">
               <div className="local-indicator" />
               <div>
@@ -703,6 +873,21 @@ export default function App() {
             )}
           </section>
         </div>
+      )}
+      {recoveryOpen && (
+        <RecoveryDialog
+          project={active ?? undefined}
+          onClose={() => setRecoveryOpen(false)}
+          onRecover={async (project) => {
+            await writes.current.catch(() => {});
+            await persist(project);
+            await open(project);
+            setRecoveryOpen(false);
+            setMessage(
+              'Recovered as a separate library copy. Inspect it, then use Save As to choose its working file.',
+            );
+          }}
+        />
       )}
       {message && (
         <div className="toast" role="status">
