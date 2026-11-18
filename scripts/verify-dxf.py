@@ -19,6 +19,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parent.parent
 CONTRACT = json.loads((ROOT / "tests/fixtures/export/cases.json").read_text(encoding="utf-8"))
+EDGE_CASES = json.loads((ROOT / "tests/fixtures/export/edge-cases.json").read_text(encoding="utf-8"))
 
 
 def equal_number(actual: float, expected: float, context: str) -> None:
@@ -44,6 +45,8 @@ def verify(case: dict, filename: Path | None = None) -> None:
     expected = case["expected"]
     assert doc.header["$INSUNITS"] == expected["insunits"]
     assert doc.header["$MEASUREMENT"] == expected["measurement"]
+    for name, color in expected.get("layerColors", {}).items():
+        assert doc.layers.get(name).dxf.color == color, f"Layer color changed for {name}"
     equal_point(doc.header["$INSBASE"], {"x": 0, "y": 0, "z": 0}, "insertion base")
     if "extents" in expected:
         for header, key in (("$EXTMIN", "min"), ("$EXTMAX", "max")):
@@ -141,6 +144,6 @@ if __name__ == "__main__":
     elif sys.argv[1:]:
         sys.exit("Usage: verify-dxf.py [--example]")
     else:
-        for test_case in CONTRACT["cases"]:
+        for test_case in CONTRACT["cases"] + EDGE_CASES["cases"]:
             verify(test_case)
     print(f"Verified DXF contract {CONTRACT['contractVersion']} with ezdxf {ezdxf.__version__}; Civil 3D receiving validation is still required.")

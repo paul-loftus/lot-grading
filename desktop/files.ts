@@ -39,6 +39,39 @@ interface Preferences {
   projectFolder?: string;
   exportFolder?: string;
 }
+/** Only validated local state may be adopted or merged after recovery. */
+function parsePreferences(raw: string): Preferences {
+  const data = JSON.parse(raw) as Preferences;
+  if (
+    !data ||
+    data.version !== 1 ||
+    !data.associations ||
+    typeof data.associations !== 'object' ||
+    Array.isArray(data.associations) ||
+    !Array.isArray(data.recent)
+  )
+    throw new Error('Invalid local file state.');
+  for (const [id, a] of Object.entries(data.associations))
+    if (
+      !validId(id) ||
+      !a ||
+      !path.isAbsolute(a.path) ||
+      !/^[a-f0-9]{64}$/.test(a.diskHash) ||
+      !/^[a-f0-9]{64}$/.test(a.projectHash)
+    )
+      throw new Error('Invalid file association.');
+  for (const r of data.recent)
+    if (
+      !r ||
+      !validId(r.key) ||
+      !validId(r.projectId) ||
+      !path.isAbsolute(r.path) ||
+      typeof r.name !== 'string' ||
+      !Number.isFinite(Date.parse(r.openedAt))
+    )
+      throw new Error('Invalid recent file.');
+  return data;
+}
 interface Revision {
   version: 1;
   savedAt: string;
@@ -167,26 +200,7 @@ export class FileStore {
     const raw = await contents(this.preferencesFile);
     if (raw === null) return;
     try {
-      const data = JSON.parse(raw) as Preferences;
-      if (data.version !== 1 || !data.associations || !Array.isArray(data.recent))
-        throw new Error('Invalid local file state.');
-      for (const [id, a] of Object.entries(data.associations))
-        if (
-          !validId(id) ||
-          !path.isAbsolute(a.path) ||
-          !/^[a-f0-9]{64}$/.test(a.diskHash) ||
-          !/^[a-f0-9]{64}$/.test(a.projectHash)
-        )
-          throw new Error('Invalid file association.');
-      for (const r of data.recent)
-        if (
-          !validId(r.key) ||
-          !validId(r.projectId) ||
-          !path.isAbsolute(r.path) ||
-          typeof r.name !== 'string' ||
-          !Number.isFinite(Date.parse(r.openedAt))
-        )
-          throw new Error('Invalid recent file.');
+      const data = parsePreferences(raw);
       this.preferences = {
         ...data,
         associations: Object.assign(Object.create(null), data.associations),
@@ -227,18 +241,10 @@ export class FileStore {
       // Merge other projects' preferences without adopting another session's baseline for ours.
       let disk: Preferences | null = null;
       try {
-        if (raw) disk = JSON.parse(raw);
+        if (raw) disk = parsePreferences(raw);
       } catch {
         /* Invalid bytes were preserved at initialization. */
       }
-      if (
-        !disk ||
-        disk.version !== 1 ||
-        !disk.associations ||
-        typeof disk.associations !== 'object' ||
-        Array.isArray(disk.associations)
-      )
-        disk = null;
       const associations = { ...(disk?.associations ?? {}) };
       for (const id of this.dirtyAssociations)
         Object.defineProperty(associations, id, {

@@ -345,3 +345,129 @@ test('native grade preview is excluded from export; Apply persists true 3D eleva
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test('changing grade segments clears the old preview, Undo restores the full path, and a new applied grade invalidates Redo', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await create(page, 'Grade history branches');
+  await page.getByTestId('tool-polyline').click();
+  await precise(page, 20, 20);
+  await precise(page, 120, 20);
+  await elevation(page, 101);
+  await precise(page, 170, 20);
+  await page.getByRole('button', { name: 'Finish line', exact: true }).click();
+  await selectGrade(page);
+  const original = (await current(page, 'Grade history branches')).entities;
+  await page.getByLabel('Target grade percent').fill('2');
+  await expect(page.getByTestId('grade-edit-preview')).toContainText('Z 100 → 102');
+  await page.getByLabel('Grade segment').selectOption('1');
+  await expect(page.getByLabel('Target grade percent')).toHaveValue('');
+  await expect(page.getByTestId('grade-edit-preview')).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Apply grade', exact: true })).toBeDisabled();
+  await page.getByLabel('Held grade endpoint').selectOption('b');
+  await page.getByLabel('Target grade percent').fill('-3');
+  await expect(page.getByTestId('grade-edit-preview')).toContainText('Z 100 → 102.5');
+  expect((await current(page, 'Grade history branches')).entities).toEqual(original);
+  await page.getByRole('button', { name: 'Apply grade', exact: true }).click();
+  await expect
+    .poll(async () => (await current(page, 'Grade history branches')).entities[0].points[1].z)
+    .toBe(102.5);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect
+    .poll(async () => (await current(page, 'Grade history branches')).entities)
+    .toEqual(original);
+  await expect(page.getByLabel('Target grade percent')).toHaveValue('');
+  await expect(page.getByTestId('grade-edit-preview')).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Redo', exact: true })).toBeEnabled();
+  await page.getByLabel('Held grade endpoint').selectOption('a');
+  await page.getByLabel('Target grade percent').fill('1');
+  await page.getByRole('button', { name: 'Apply grade', exact: true }).click();
+  await expect
+    .poll(async () => (await current(page, 'Grade history branches')).entities[0].points[2].z)
+    .toBe(100.5);
+  await expect(page.getByRole('button', { name: 'Redo', exact: true })).toBeDisabled();
+  const saved = await current(page, 'Grade history branches');
+  expect(saved.entities[0].points.slice(0, 2)).toEqual(original[0].points.slice(0, 2));
+});
+
+test('Grade check requires a source target, uses interpolated source Z even with Alt, and restores the drawing snap preference', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await create(page, 'Source-only grade checks');
+  await page.getByTestId('tool-polyline').click();
+  await precise(page, 20, 20);
+  await elevation(page, 102);
+  await precise(page, 120, 20);
+  await page.getByRole('button', { name: 'Finish line', exact: true }).click();
+  await elevation(page, 555);
+  await page.getByRole('button', { name: 'Object snaps', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Object snaps', exact: true })).toContainText(
+    'OFF',
+  );
+  await page.getByRole('button', { name: 'Fit drawing', exact: true }).click();
+  const original = await current(page, 'Source-only grade checks');
+  await page.getByTestId('tool-grade').click();
+  const snaps = page.getByRole('button', { name: 'Object snaps', exact: true });
+  await expect(snaps).toBeDisabled();
+  await expect(snaps).toContainText('ON');
+  const box = (await page.getByTestId('drawing-canvas').boundingBox())!;
+  await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.25);
+  await expect(page.getByRole('alert').filter({ hasText: 'no supplied elevation' })).toBeVisible();
+  await expect(page.getByText('Choose control A.', { exact: true })).toBeVisible();
+  await page.keyboard.down('Alt');
+  try {
+    await pick(page, original, 70, 20);
+    await pick(page, original, 120, 20);
+  } finally {
+    await page.keyboard.up('Alt');
+  }
+  await expect(page.getByTestId('grade-run')).toHaveText('50 ft');
+  await expect(page.getByTestId('grade-rise')).toHaveText('+1 ft');
+  await expect(page.getByTestId('grade-percent')).toHaveText('+2%');
+  await expect(page.getByText('X 70, Y 20, Z 101 ft', { exact: false })).toBeVisible();
+  expect((await current(page, 'Source-only grade checks')).entities).toEqual(original.entities);
+  await page.getByRole('button', { name: 'Clear grade check', exact: true }).click();
+  await expect(page.getByTestId('grade-overlay')).not.toBeVisible();
+  await page.getByTestId('tool-polyline').click();
+  await expect(snaps).toBeEnabled();
+  await expect(snaps).toContainText('OFF');
+  await expect(page.getByLabel('Drawing elevation', { exact: true })).toHaveValue('555');
+});
+
+test('selecting a different feature with identical geometry discards the first feature’s uncommitted grade and held endpoint', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await create(page, 'Independent grade selections');
+  await page.getByTestId('tool-polyline').click();
+  for (let i = 0; i < 2; i++) {
+    await precise(page, 20, 20);
+    await precise(page, 120, 20);
+    await page.getByRole('button', { name: 'Finish line', exact: true }).click();
+  }
+  await selectGrade(page, 'Line 1');
+  const original = (await current(page, 'Independent grade selections')).entities;
+  expect(original).toHaveLength(2);
+  expect(original[0].points).toEqual(original[1].points);
+  await page.getByLabel('Held grade endpoint').selectOption('b');
+  await page.getByLabel('Target grade percent').fill('2');
+  await expect(page.getByTestId('grade-edit-preview')).toContainText('Z 100 → 98');
+  await selectGrade(page, 'Line 2');
+  await expect(page.getByLabel('Target grade percent')).toHaveValue('');
+  await expect(page.getByLabel('Held grade endpoint')).toHaveValue('a');
+  await expect(page.getByTestId('grade-edit-preview')).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Apply grade', exact: true })).toBeDisabled();
+  expect((await current(page, 'Independent grade selections')).entities).toEqual(original);
+  await page.getByLabel('Target grade percent').fill('-1');
+  await page.getByRole('button', { name: 'Apply grade', exact: true }).click();
+  await expect
+    .poll(async () => (await current(page, 'Independent grade selections')).entities[1].points[1].z)
+    .toBe(99);
+  expect((await current(page, 'Independent grade selections')).entities[0]).toEqual(original[0]);
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect
+    .poll(async () => (await current(page, 'Independent grade selections')).entities)
+    .toEqual(original);
+});

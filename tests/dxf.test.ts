@@ -235,3 +235,50 @@ test('escapes literal backslashes in text so they cannot become a DXF Unicode se
   project.entities[7].name = 'Literal \\U+0041';
   assert.ok(exportDxf(project).includes('Literal \\U+005CU+0041 -2.125'));
 });
+
+test('ordinary layer names matching JavaScript prototype properties export valid default CAD colors', () => {
+  for (const name of [
+    'constructor',
+    '__proto__',
+    'toString',
+    'hasOwnProperty',
+    'normal-custom-layer',
+  ]) {
+    const project = base();
+    for (const entity of project.entities) entity.layer = name;
+    const tags = pairs(exportDxf(project)),
+      colors = tags.filter(([code]) => code === 62);
+    assert.equal(colors.length, 2, 'The default 0 layer and the custom layer each have a color.');
+    for (const [, color] of colors) {
+      assert.match(color, /^\d+$/, `${name} must not read a color from Object.prototype`);
+      assert.equal(Number(color), 7);
+    }
+  }
+});
+
+test('DXF handles and owner links form a complete graph, including every 3D vertex and SEQEND', () => {
+  const tags = pairs(exportDxf(base())),
+    handles = new Set(tags.filter(([code]) => code === 5).map(([, value]) => value));
+  for (const [code, value] of tags) {
+    if ([330, 340, 350].includes(code) && value !== '0')
+      assert.ok(
+        handles.has(value),
+        `Owner/reference ${code}:${value} must resolve to a defined handle.`,
+      );
+  }
+  const records: [number, string][][] = [];
+  for (const tag of tags) {
+    if (tag[0] === 0) records.push([]);
+    records.at(-1)?.push(tag);
+  }
+  let polylineHandle: string | undefined;
+  for (const record of records) {
+    const type = record[0][1];
+    if (type === 'POLYLINE') polylineHandle = record.find(([code]) => code === 5)![1];
+    if (type === 'VERTEX' || type === 'SEQEND') {
+      assert.ok(polylineHandle);
+      assert.equal(record.find(([code]) => code === 330)![1], polylineHandle);
+      if (type === 'SEQEND') polylineHandle = undefined;
+    }
+  }
+});

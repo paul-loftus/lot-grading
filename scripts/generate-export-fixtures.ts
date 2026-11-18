@@ -8,11 +8,15 @@ const contractPath = resolve(root, 'tests/fixtures/export/cases.json');
 const contract = JSON.parse(await readFile(contractPath, 'utf8')) as {
   cases: { name: string; project: Project }[];
 };
+const edgeCases = JSON.parse(
+  await readFile(resolve(root, 'tests/fixtures/export/edge-cases.json'), 'utf8'),
+) as typeof contract;
+const cases = [...contract.cases, ...edgeCases.cases];
 const output = resolve(root, 'tests/.generated');
 await mkdir(output, { recursive: true });
-for (const testCase of contract.cases) {
+for (const testCase of cases) {
   await writeFile(resolve(output, `${testCase.name}.dxf`), exportDxf(testCase.project), 'ascii');
 }
 console.log(
-  `Generated ${contract.cases.length} DXF fixtures from the current exporter in tests/.generated.`,
+  `Generated ${cases.length} DXF fixtures from the current exporter in tests/.generated.`,
 );

@@ -358,7 +358,7 @@ export function exportDxf(project: Project): string {
       [100, 'AcDbLayerTableRecord'],
       [2, ascii(layer)],
       [70, 0],
-      [62, colors[layer] ?? 7],
+      [62, Object.hasOwn(colors, layer) ? colors[layer] : 7],
       [6, 'Continuous'],
       [370, -3],
     );

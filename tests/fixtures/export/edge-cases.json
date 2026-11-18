@@ -1,0 +1,105 @@
+{
+  "cases": [
+    {
+      "name": "prototype-layer-names",
+      "project": {
+        "schemaVersion": 1,
+        "id": "prototype-layers",
+        "name": "Custom CAD layer colors",
+        "description": "Regression controls for valid layer names that match JavaScript prototype properties.",
+        "units": "feet",
+        "createdAt": "2026-11-13T00:00:00.000Z",
+        "updatedAt": "2026-11-13T00:00:00.000Z",
+        "entities": [
+          {
+            "id": "constructor-edge",
+            "kind": "polyline",
+            "name": "Constructor edge",
+            "layer": "constructor",
+            "closed": false,
+            "points": [
+              { "x": 0, "y": 0, "z": 100 },
+              { "x": 10, "y": 0, "z": 100 }
+            ]
+          },
+          {
+            "id": "proto-edge",
+            "kind": "polyline",
+            "name": "Prototype edge",
+            "layer": "__proto__",
+            "closed": false,
+            "points": [
+              { "x": 0, "y": 10, "z": 101 },
+              { "x": 10, "y": 10, "z": 101 }
+            ]
+          },
+          {
+            "id": "string-edge",
+            "kind": "polyline",
+            "name": "String edge",
+            "layer": "toString",
+            "closed": false,
+            "points": [
+              { "x": 0, "y": 20, "z": 102 },
+              { "x": 10, "y": 20, "z": 102 }
+            ]
+          },
+          {
+            "id": "own-edge",
+            "kind": "polyline",
+            "name": "Own property edge",
+            "layer": "hasOwnProperty",
+            "closed": false,
+            "points": [
+              { "x": 0, "y": 30, "z": 103 },
+              { "x": 10, "y": 30, "z": 103 }
+            ]
+          },
+          {
+            "id": "value-edge",
+            "kind": "polyline",
+            "name": "Value edge",
+            "layer": "valueOf",
+            "closed": false,
+            "points": [
+              { "x": 0, "y": 40, "z": 104 },
+              { "x": 10, "y": 40, "z": 104 }
+            ]
+          },
+          {
+            "id": "contour-control",
+            "kind": "contour",
+            "name": "Assigned color control",
+            "layer": "FG-CONTOUR",
+            "closed": false,
+            "points": [
+              { "x": 0, "y": 50, "z": 105 },
+              { "x": 10, "y": 50, "z": 105 }
+            ]
+          }
+        ],
+        "view": { "centerX": 5, "centerY": 25, "scale": 5 },
+        "settings": { "gridSize": 1, "snapToGrid": true, "contourInterval": 1 }
+      },
+      "expected": {
+        "insunits": 2,
+        "measurement": 0,
+        "primaryEntityCount": 6,
+        "textCount": 0,
+        "lwpolylineCount": 6,
+        "polyline3dCount": 0,
+        "pointCount": 0,
+        "extents": { "min": [0, 0, 100], "max": [10, 50, 105] },
+        "layerColors": {
+          "0": 7,
+          "constructor": 7,
+          "__proto__": 7,
+          "toString": 7,
+          "hasOwnProperty": 7,
+          "valueOf": 7,
+          "FG-CONTOUR": 3
+        }
+      }
+    }
+  ]
+}
